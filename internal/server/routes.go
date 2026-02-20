@@ -36,5 +36,11 @@ func (s *Server) RegisterRoutes() http.Handler {
 	authProtected.POST("/nickname", s.auth.SetNickname)
 	authProtected.DELETE("/withdraw", s.auth.Withdraw)
 
+	// Activity - all protected
+	activityGroup := e.Group("/activities", middleware.JWTAuth())
+	activityGroup.GET("", s.activity.List)
+	activityGroup.POST("", s.activity.Create)
+	activityGroup.DELETE("/:activity_id", s.activity.Delete)
+
 	return e
 }

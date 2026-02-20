@@ -28,9 +28,9 @@ type authService struct {
 	socialVerifier auth.SocialVerifier
 }
 
-func NewAuthService(userRepo repository.UserRepository, socialVerifier auth.SocialVerifier) AuthService {
+func NewAuthService(ur repository.UserRepository, socialVerifier auth.SocialVerifier) AuthService {
 	return &authService{
-		userRepo:       userRepo,
+		userRepo:       ur,
 		socialVerifier: socialVerifier,
 	}
 }
@@ -76,9 +76,14 @@ func (s *authService) findOrCreateAndGenerateToken(
 
 		now := time.Now()
 		user = &model.User{
-			SocialProvider:    provider,
-			SocialID:          socialID,
-			Tag:               tag,
+			SocialProvider: provider,
+			SocialID:       socialID,
+			Tag:            tag,
+			NotificationSettings: model.NotificationSettings{
+				VoidReminder:  false,
+				ReminderHours: 1,
+				FriendNudge:   false,
+			},
 			AppleRefreshToken: appleRefreshToken,
 			CreatedAt:         now,
 			UpdatedAt:         now,

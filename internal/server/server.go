@@ -17,9 +17,10 @@ import (
 )
 
 type Server struct {
-	port   int
-	health *handler.HealthHandler
-	auth   *handler.AuthHandler
+	port     int
+	health   *handler.HealthHandler
+	auth     *handler.AuthHandler
+	activity *handler.ActivityHandler
 }
 
 func NewServer() *http.Server {
@@ -38,10 +39,16 @@ func NewServer() *http.Server {
 	authSvc := service.NewAuthService(userRepo, socialVerifier)
 	authHandler := handler.NewAuthHandler(authSvc)
 
+	// Activity
+	activityRepo := repository.NewActivityRepository(db)
+	activitySvc := service.NewActivityService(activityRepo)
+	activityHandler := handler.NewActivityHandler(activitySvc)
+
 	s := &Server{
-		port:   port,
-		health: healthHandler,
-		auth:   authHandler,
+		port:     port,
+		health:   healthHandler,
+		auth:     authHandler,
+		activity: activityHandler,
 	}
 
 	server := &http.Server{
