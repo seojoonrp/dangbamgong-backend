@@ -5,12 +5,22 @@ import (
 
 	"dangbamgong-backend/internal/middleware"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	echoMiddleware "github.com/labstack/echo/v4/middleware"
 )
 
+type customValidator struct {
+	validator *validator.Validate
+}
+
+func (cv *customValidator) Validate(i interface{}) error {
+	return cv.validator.Struct(i)
+}
+
 func (s *Server) RegisterRoutes() http.Handler {
 	e := echo.New()
+	e.Validator = &customValidator{validator: validator.New()}
 	e.HTTPErrorHandler = middleware.ErrorHandler
 
 	e.Use(echoMiddleware.Logger())
