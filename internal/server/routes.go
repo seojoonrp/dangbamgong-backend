@@ -26,5 +26,15 @@ func (s *Server) RegisterRoutes() http.Handler {
 	e.GET("/", s.health.HelloWorld)
 	e.GET("/health", s.health.Health)
 
+	// Auth - public
+	authGroup := e.Group("/auth")
+	authGroup.POST("/login", s.auth.Login)
+	authGroup.POST("/login/test", s.auth.TestLogin)
+
+	// Auth - protected
+	authProtected := authGroup.Group("", middleware.JWTAuth())
+	authProtected.POST("/nickname", s.auth.SetNickname)
+	authProtected.DELETE("/withdraw", s.auth.Withdraw)
+
 	return e
 }

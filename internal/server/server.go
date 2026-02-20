@@ -9,6 +9,7 @@ import (
 
 	_ "github.com/joho/godotenv/autoload"
 
+	"dangbamgong-backend/internal/auth"
 	"dangbamgong-backend/internal/database"
 	"dangbamgong-backend/internal/handler"
 	"dangbamgong-backend/internal/repository"
@@ -18,6 +19,7 @@ import (
 type Server struct {
 	port   int
 	health *handler.HealthHandler
+	auth   *handler.AuthHandler
 }
 
 func NewServer() *http.Server {
@@ -25,13 +27,21 @@ func NewServer() *http.Server {
 
 	db := database.New()
 
+	// Health
 	healthRepo := repository.NewHealthRepository(db)
 	healthSvc := service.NewHealthService(healthRepo)
 	healthHandler := handler.NewHealthHandler(healthSvc)
 
+	// Auth
+	userRepo := repository.NewUserRepository(db)
+	socialVerifier := auth.NewSocialVerifier()
+	authSvc := service.NewAuthService(userRepo, socialVerifier)
+	authHandler := handler.NewAuthHandler(authSvc)
+
 	s := &Server{
 		port:   port,
 		health: healthHandler,
+		auth:   authHandler,
 	}
 
 	server := &http.Server{
