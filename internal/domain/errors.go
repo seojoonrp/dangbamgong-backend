@@ -4,15 +4,55 @@ import "net/http"
 
 type ErrorCode string
 
+// Common
 const (
-	ErrBadRequest          ErrorCode = "BAD_REQUEST"
-	ErrNotFound            ErrorCode = "NOT_FOUND"
-	ErrInternalServer      ErrorCode = "INTERNAL_SERVER_ERROR"
-	ErrUnauthorized        ErrorCode = "UNAUTHORIZED"
-	ErrForbidden           ErrorCode = "FORBIDDEN"
-	ErrConflict            ErrorCode = "CONFLICT"
-	ErrUserAlreadyExists   ErrorCode = "USER_ALREADY_EXISTS"
-	ErrServiceUnavailable  ErrorCode = "SERVICE_UNAVAILABLE"
+	ErrBadRequest         ErrorCode = "BAD_REQUEST"
+	ErrNotFound           ErrorCode = "NOT_FOUND"
+	ErrInternalServer     ErrorCode = "INTERNAL_SERVER_ERROR"
+	ErrUnauthorized       ErrorCode = "UNAUTHORIZED"
+	ErrForbidden          ErrorCode = "FORBIDDEN"
+	ErrConflict           ErrorCode = "CONFLICT"
+	ErrServiceUnavailable ErrorCode = "SERVICE_UNAVAILABLE"
+)
+
+// Auth
+const (
+	ErrInvalidToken       ErrorCode = "INVALID_TOKEN"
+	ErrInvalidNickname    ErrorCode = "INVALID_NICKNAME"
+	ErrNicknameAlreadySet ErrorCode = "NICKNAME_ALREADY_SET"
+)
+
+// User
+const (
+	ErrUserNotFound   ErrorCode = "USER_NOT_FOUND"
+	ErrAlreadyBlocked ErrorCode = "ALREADY_BLOCKED"
+	ErrNotBlocked     ErrorCode = "NOT_BLOCKED"
+)
+
+// Void
+const (
+	ErrAlreadyInVoid     ErrorCode = "ALREADY_IN_VOID"
+	ErrNotInVoid         ErrorCode = "NOT_IN_VOID"
+	ErrTooManyActivities ErrorCode = "TOO_MANY_ACTIVITIES"
+)
+
+// Activity
+const (
+	ErrInvalidActivityName   ErrorCode = "INVALID_ACTIVITY_NAME"
+	ErrActivityAlreadyExists ErrorCode = "ACTIVITY_ALREADY_EXISTS"
+	ErrActivityNotFound      ErrorCode = "ACTIVITY_NOT_FOUND"
+)
+
+// Friend
+const (
+	ErrAlreadyFriends     ErrorCode = "ALREADY_FRIENDS"
+	ErrRequestAlreadySent ErrorCode = "REQUEST_ALREADY_SENT"
+	ErrBlocked            ErrorCode = "BLOCKED"
+	ErrRequestNotFound    ErrorCode = "REQUEST_NOT_FOUND"
+	ErrRequestNotPending  ErrorCode = "REQUEST_NOT_PENDING"
+	ErrNotFriends         ErrorCode = "NOT_FRIENDS"
+	ErrFriendNotInVoid    ErrorCode = "FRIEND_NOT_IN_VOID"
+	ErrInvalidRequestType ErrorCode = "INVALID_REQUEST_TYPE"
 )
 
 type AppError struct {
