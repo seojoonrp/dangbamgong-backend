@@ -23,7 +23,9 @@ func (s *Server) RegisterRoutes() http.Handler {
 	e.Validator = &customValidator{validator: validator.New()}
 	e.HTTPErrorHandler = middleware.ErrorHandler
 
-	e.Use(echoMiddleware.Logger())
+	e.Use(echoMiddleware.LoggerWithConfig(echoMiddleware.LoggerConfig{
+		Format: "[\033[32m${time_rfc3339}\033[0m] ${status} | ${method} ${uri} | ${latency_human}",
+	}))
 	e.Use(echoMiddleware.Recover())
 	e.Use(echoMiddleware.CORSWithConfig(echoMiddleware.CORSConfig{
 		AllowOrigins:     []string{"https://*", "http://*"},

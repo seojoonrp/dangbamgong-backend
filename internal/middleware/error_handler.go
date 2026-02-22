@@ -3,7 +3,7 @@ package middleware
 
 import (
 	"errors"
-	"log"
+	"fmt"
 	"net/http"
 
 	"dangbamgong-backend/internal/domain"
@@ -20,14 +20,15 @@ func ErrorHandler(err error, c echo.Context) {
 
 	var appErr *domain.AppError
 	if errors.As(err, &appErr) {
-		log.Printf("[AppError] status=%d code=%s message=%s", appErr.StatusCode, appErr.Code, appErr.Message)
+		fmt.Printf("\n\033[33m[AppError] %d | %s | %s\033[0m\n",
+			appErr.StatusCode, appErr.Code, appErr.Message)
 		_ = dto.Fail(c, appErr.StatusCode, appErr.Code)
 		return
 	}
 
 	var validationErrors validator.ValidationErrors
 	if errors.As(err, &validationErrors) {
-		log.Printf("[ValidationError] %v", validationErrors)
+		fmt.Printf("\n\033[36m[ValidationError] %v\033[0m\n", validationErrors)
 		_ = dto.Fail(c, http.StatusBadRequest, domain.ErrBadRequest)
 		return
 	}
@@ -35,12 +36,13 @@ func ErrorHandler(err error, c echo.Context) {
 	var echoErr *echo.HTTPError
 	if errors.As(err, &echoErr) {
 		code := mapHTTPStatusToErrorCode(echoErr.Code)
-		log.Printf("[HTTPError] status=%d message=%v", echoErr.Code, echoErr.Message)
+		fmt.Printf("\n\033[35m[HTTPError] %d | %v\033[0m\n",
+			echoErr.Code, echoErr.Message)
 		_ = dto.Fail(c, echoErr.Code, code)
 		return
 	}
 
-	log.Printf("[UnhandledError] %v", err)
+	fmt.Printf("\n\033[31m[UnhandledError] %v\033[0m\n", err)
 	_ = dto.Fail(c, http.StatusInternalServerError, domain.ErrInternalServer)
 }
 
