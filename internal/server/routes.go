@@ -70,5 +70,16 @@ func (s *Server) RegisterRoutes() http.Handler {
 	voidGroup.GET("/history", s.void.History)
 	voidGroup.POST("/test", s.void.TestCreate)
 
+	// Friend - all protected
+	friendGroup := e.Group("/friends", middleware.JWTAuth())
+	friendGroup.GET("/search", s.friend.Search)
+	friendGroup.GET("", s.friend.GetFriends)
+	friendGroup.DELETE("/:user_id", s.friend.RemoveFriend)
+	friendGroup.GET("/requests", s.friend.GetRequests)
+	friendGroup.POST("/requests", s.friend.SendRequest)
+	friendGroup.POST("/requests/:request_id/accept", s.friend.AcceptRequest)
+	friendGroup.POST("/requests/:request_id/reject", s.friend.RejectRequest)
+	friendGroup.POST("/:user_id/nudge", s.friend.Nudge)
+
 	return e
 }

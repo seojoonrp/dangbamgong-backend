@@ -23,6 +23,7 @@ type Server struct {
 	activity *handler.ActivityHandler
 	user     *handler.UserHandler
 	void     *handler.VoidHandler
+	friend   *handler.FriendHandler
 }
 
 func NewServer() *http.Server {
@@ -48,13 +49,19 @@ func NewServer() *http.Server {
 
 	// User
 	blockRepo := repository.NewBlockRepository(db)
-	userSvc := service.NewUserService(userRepo, blockRepo)
+	friendshipRepo := repository.NewFriendshipRepository(db)
+	friendRequestRepo := repository.NewFriendRequestRepository(db)
+	userSvc := service.NewUserService(userRepo, blockRepo, friendshipRepo, friendRequestRepo)
 	userHandler := handler.NewUserHandler(userSvc)
 
 	// Void
 	voidSessionRepo := repository.NewVoidSessionRepository(db)
 	voidSvc := service.NewVoidService(userRepo, voidSessionRepo, activityRepo)
 	voidHandler := handler.NewVoidHandler(voidSvc)
+
+	// Friend
+	friendSvc := service.NewFriendService(userRepo, blockRepo, friendshipRepo, friendRequestRepo)
+	friendHandler := handler.NewFriendHandler(friendSvc)
 
 	s := &Server{
 		port:     port,
@@ -63,6 +70,7 @@ func NewServer() *http.Server {
 		activity: activityHandler,
 		user:     userHandler,
 		void:     voidHandler,
+		friend:   friendHandler,
 	}
 
 	server := &http.Server{

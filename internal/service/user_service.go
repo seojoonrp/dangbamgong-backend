@@ -21,14 +21,23 @@ type UserService interface {
 }
 
 type userService struct {
-	userRepo  repository.UserRepository
-	blockRepo repository.BlockRepository
+	userRepo          repository.UserRepository
+	blockRepo         repository.BlockRepository
+	friendshipRepo    repository.FriendshipRepository
+	friendRequestRepo repository.FriendRequestRepository
 }
 
-func NewUserService(ur repository.UserRepository, br repository.BlockRepository) UserService {
+func NewUserService(
+	ur repository.UserRepository,
+	br repository.BlockRepository,
+	fr repository.FriendshipRepository,
+	frr repository.FriendRequestRepository,
+) UserService {
 	return &userService{
-		userRepo:  ur,
-		blockRepo: br,
+		userRepo:          ur,
+		blockRepo:         br,
+		friendshipRepo:    fr,
+		friendRequestRepo: frr,
 	}
 }
 
@@ -152,7 +161,13 @@ func (s *userService) Block(ctx context.Context, userID string, targetID string)
 		return domain.NewInternal("failed to create block: " + err.Error())
 	}
 
-	// TODO: 친구 관계가 있으면 함께 삭제
+	if err := s.friendshipRepo.DeleteByUserPair(ctx, oid, targetOid); err != nil {
+		return domain.NewInternal("failed to delete friendship: " + err.Error())
+	}
+
+	if err := s.friendRequestRepo.DeleteByUserPair(ctx, oid, targetOid); err != nil {
+		return domain.NewInternal("failed to delete friend requests: " + err.Error())
+	}
 
 	return nil
 }

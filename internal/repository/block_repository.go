@@ -17,6 +17,7 @@ type BlockRepository interface {
 	Create(ctx context.Context, block *model.Block) error
 	Delete(ctx context.Context, userID, blockedID primitive.ObjectID) error
 	DeleteByUserID(ctx context.Context, userID primitive.ObjectID) error
+	FindByBlockedID(ctx context.Context, blockedID primitive.ObjectID) ([]model.Block, error)
 }
 
 type blockRepository struct {
@@ -85,4 +86,21 @@ func (r *blockRepository) DeleteByUserID(ctx context.Context, userID primitive.O
 		bson.M{"blocked_id": userID},
 	}})
 	return err
+}
+
+func (r *blockRepository) FindByBlockedID(ctx context.Context, blockedID primitive.ObjectID) ([]model.Block, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	cursor, err := r.coll.Find(ctx, bson.M{"blocked_id": blockedID})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var blocks []model.Block
+	if err := cursor.All(ctx, &blocks); err != nil {
+		return nil, err
+	}
+	return blocks, nil
 }
