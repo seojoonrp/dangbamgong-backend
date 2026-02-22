@@ -81,5 +81,10 @@ func (s *Server) RegisterRoutes() http.Handler {
 	friendGroup.POST("/requests/:request_id/reject", s.friend.RejectRequest)
 	friendGroup.POST("/:user_id/nudge", s.friend.Nudge)
 
+	// Stat - all protected
+	statGroup := e.Group("/stats", middleware.JWTAuth())
+	statGroup.GET("/live", s.stat.GetLiveStat)
+	statGroup.GET("/daily", s.stat.GetDailyStat)
+
 	return e
 }

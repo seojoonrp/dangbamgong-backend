@@ -1,8 +1,10 @@
 @host = http://localhost:8080
 
+
 ##########################################################
 # Auth
 ##########################################################
+
 
 ### 테스트 로그인 (유저 1)
 # @name login1
@@ -11,23 +13,47 @@ Content-Type: application/json
 
 {"social_id": "test-user-001"}
 
-### 테스트 로그인 (유저 2) - 차단 테스트용
+### 테스트 로그인 (유저 2)
 # @name login2
 POST {{host}}/auth/login/test
 Content-Type: application/json
 
 {"social_id": "test-user-002"}
 
-### 닉네임 설정
+### 테스트 로그인 (유저 3)
+# @name login3
+POST {{host}}/auth/login/test
+Content-Type: application/json
+
+{"social_id": "test-user-003"}
+
+
+### 닉네임 설정 (유저 1)
 POST {{host}}/auth/nickname
 Authorization: Bearer {{login1.response.body.$.data.access_token}}
 Content-Type: application/json
 
 {"nickname": "테스트유저"}
 
+### 닉네임 설정 (유저 2)
+POST {{host}}/auth/nickname
+Authorization: Bearer {{login2.response.body.$.data.access_token}}
+Content-Type: application/json
+
+{"nickname": "친구유저"}
+
+### 닉네임 설정 (유저 3)
+POST {{host}}/auth/nickname
+Authorization: Bearer {{login3.response.body.$.data.access_token}}
+Content-Type: application/json
+
+{"nickname": "차단유저"}
+
+
 ##########################################################
 # User
 ##########################################################
+
 
 ### 내 프로필 조회 (login1)
 # @name getMe1
@@ -39,6 +65,12 @@ Authorization: Bearer {{login1.response.body.$.data.access_token}}
 GET {{host}}/users/me
 Authorization: Bearer {{login2.response.body.$.data.access_token}}
 
+### 내 프로필 조회 (login3)
+# @name getMe3
+GET {{host}}/users/me
+Authorization: Bearer {{login3.response.body.$.data.access_token}}
+
+
 ### 알림 설정 변경
 PATCH {{host}}/users/me/settings
 Authorization: Bearer {{login1.response.body.$.data.access_token}}
@@ -46,11 +78,17 @@ Content-Type: application/json
 
 {"void_reminder": true, "reminder_hours": 2}
 
-### 유저 차단 (유저2의 ID를 넣어야 함)
+
+##########################################################
+# block
+##########################################################
+
+
+### 유저 차단
 POST {{host}}/users/{{getMe2.response.body.$.data.id}}/block
 Authorization: Bearer {{login1.response.body.$.data.access_token}}
 
-### 차단 목록 조회
+### 차단 목록 조회 (유저2가 떠야됨)
 GET {{host}}/users/blocks
 Authorization: Bearer {{login1.response.body.$.data.access_token}}
 
@@ -58,9 +96,15 @@ Authorization: Bearer {{login1.response.body.$.data.access_token}}
 POST {{host}}/users/{{getMe2.response.body.$.data.id}}/unblock
 Authorization: Bearer {{login1.response.body.$.data.access_token}}
 
+### 차단 목록 다시 조회 (아무것도 안 떠야됨)
+GET {{host}}/users/blocks
+Authorization: Bearer {{login1.response.body.$.data.access_token}}
+
+
 ##########################################################
 # Activity
 ##########################################################
+
 
 ### 활동 목록 조회
 GET {{host}}/activities
@@ -72,15 +116,17 @@ POST {{host}}/activities
 Authorization: Bearer {{login1.response.body.$.data.access_token}}
 Content-Type: application/json
 
-{"name": "클로"}
+{"name": "스도쿠"}
 
 ### 활동 삭제
 DELETE {{host}}/activities/{{createActivity.response.body.$.data.id}}
 Authorization: Bearer {{login1.response.body.$.data.access_token}}
 
+
 ##########################################################
 # Void
 ##########################################################
+
 
 ### 공백 시작
 POST {{host}}/void/start
@@ -91,7 +137,7 @@ POST {{host}}/void/end
 Authorization: Bearer {{login1.response.body.$.data.access_token}}
 Content-Type: application/json
 
-{"activities": []}
+{"activities": ["스도쿠"]}
 
 ### 공백 취소
 POST {{host}}/void/cancel
@@ -108,9 +154,130 @@ Content-Type: application/json
 GET {{host}}/void/history?target_day=2026-02-22
 Authorization: Bearer {{login1.response.body.$.data.access_token}}
 
+
+##########################################################
+# Friend: Normal flow
+##########################################################
+
+
+### 1. 태그로 유저 검색
+GET {{host}}/friends/search?tag={{getMe2.response.body.$.data.tag}}
+Authorization: Bearer {{login1.response.body.$.data.access_token}}
+
+### 2. 친구 요청 보내기 (유저1 → 유저2)
+# @name sendRequest
+POST {{host}}/friends/requests
+Authorization: Bearer {{login1.response.body.$.data.access_token}}
+Content-Type: application/json
+
+{"receiver_id": "{{getMe2.response.body.$.data.id}}"}
+
+### 3. 보낸 요청 목록 확인 (유저1)
+GET {{host}}/friends/requests?type=sent
+Authorization: Bearer {{login1.response.body.$.data.access_token}}
+
+### 4. 받은 요청 목록 확인 (유저2)
+GET {{host}}/friends/requests?type=received
+Authorization: Bearer {{login2.response.body.$.data.access_token}}
+
+### 5. 친구 요청 수락 (유저2)
+POST {{host}}/friends/requests/{{sendRequest.response.body.$.data.request_id}}/accept
+Authorization: Bearer {{login2.response.body.$.data.access_token}}
+
+### 6. 친구 목록 조회 (유저1) -> is_in_void: false
+GET {{host}}/friends
+Authorization: Bearer {{login1.response.body.$.data.access_token}}
+
+### 7. 유저2 공백 시작
+POST {{host}}/void/start
+Authorization: Bearer {{login2.response.body.$.data.access_token}}
+
+### 8. 친구 목록 재조회 (유저1) -> is_in_void: true
+GET {{host}}/friends
+Authorization: Bearer {{login1.response.body.$.data.access_token}}
+
+### 9. 넛지 (유저1 → 유저2)
+POST {{host}}/friends/{{getMe2.response.body.$.data.id}}/nudge
+Authorization: Bearer {{login1.response.body.$.data.access_token}}
+
+### 10. 유저2 공백 취소
+POST {{host}}/void/cancel
+Authorization: Bearer {{login2.response.body.$.data.access_token}}
+
+### 11. 친구 삭제 (유저1 -> 유저2)
+DELETE {{host}}/friends/{{getMe2.response.body.$.data.id}}
+Authorization: Bearer {{login1.response.body.$.data.access_token}}
+
+
+##########################################################
+# Friend: Reject flow
+##########################################################
+
+
+### 친구 요청 보내기 (유저1 -> 유저3)
+# @name sendRequest3
+POST {{host}}/friends/requests
+Authorization: Bearer {{login1.response.body.$.data.access_token}}
+Content-Type: application/json
+
+{"receiver_id": "{{getMe3.response.body.$.data.id}}"}
+
+### 친구 요청 거절 (유저3)
+POST {{host}}/friends/requests/{{sendRequest3.response.body.$.data.request_id}}/reject
+Authorization: Bearer {{login3.response.body.$.data.access_token}}
+
+### 보낸 요청 목록에서 REJECTED 확인 (유저1)
+GET {{host}}/friends/requests?type=sent
+Authorization: Bearer {{login1.response.body.$.data.access_token}}
+
+
+##########################################################
+# Friend: Block flow
+##########################################################
+
+
+### 유저3 차단 (유저1이 유저3을 차단)
+POST {{host}}/users/{{getMe3.response.body.$.data.id}}/block
+Authorization: Bearer {{login1.response.body.$.data.access_token}}
+
+### 검색에서 차단된 유저 제외 확인 (유저3 태그로 검색 -> 결과 없어야 함)
+GET {{host}}/friends/search?tag={{getMe3.response.body.$.data.tag}}
+Authorization: Bearer {{login1.response.body.$.data.access_token}}
+
+### 차단된 유저에게 친구 요청 -> BLOCKED
+POST {{host}}/friends/requests
+Authorization: Bearer {{login1.response.body.$.data.access_token}}
+Content-Type: application/json
+
+{"receiver_id": "{{getMe3.response.body.$.data.id}}"}
+
+### 유저3 차단 해제
+POST {{host}}/users/{{getMe3.response.body.$.data.id}}/unblock
+Authorization: Bearer {{login1.response.body.$.data.access_token}}
+
+
+##########################################################
+# Stat
+##########################################################
+
+
+### 실시간 통계 조회
+GET {{host}}/stats/live
+Authorization: Bearer {{login1.response.body.$.data.access_token}}
+
+### 일별 통계 조회 (오늘)
+GET {{host}}/stats/daily?target_day=2026-02-22
+Authorization: Bearer {{login1.response.body.$.data.access_token}}
+
+### 일별 통계 조회 (공백 안 한 유저) -> my_rank, total_users null
+GET {{host}}/stats/daily?target_day=2026-02-22
+Authorization: Bearer {{login2.response.body.$.data.access_token}}
+
+
 ##########################################################
 # Health
 ##########################################################
+
 
 ### Health Check
 GET {{host}}/health

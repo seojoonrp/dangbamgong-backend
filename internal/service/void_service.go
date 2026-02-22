@@ -219,9 +219,5 @@ func (s *voidService) TestCreate(ctx context.Context, userID string, req dto.Tes
 }
 
 func calcTargetDay(t time.Time) string {
-	kst := t.In(config.KST)
-	if kst.Hour() < config.DayStartHour {
-		kst = kst.AddDate(0, 0, -1)
-	}
-	return kst.Format("2006-01-02")
+	return config.CalcTargetDay(t)
 }
