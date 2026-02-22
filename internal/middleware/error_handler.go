@@ -20,7 +20,7 @@ func ErrorHandler(err error, c echo.Context) {
 
 	var appErr *domain.AppError
 	if errors.As(err, &appErr) {
-		fmt.Printf("\n\033[33m[AppError] %d | %s | %s\033[0m\n",
+		fmt.Printf("\033[33m[AppError] %d | %s | %s\033[0m\n",
 			appErr.StatusCode, appErr.Code, appErr.Message)
 		_ = dto.Fail(c, appErr.StatusCode, appErr.Code)
 		return
@@ -28,7 +28,7 @@ func ErrorHandler(err error, c echo.Context) {
 
 	var validationErrors validator.ValidationErrors
 	if errors.As(err, &validationErrors) {
-		fmt.Printf("\n\033[36m[ValidationError] %v\033[0m\n", validationErrors)
+		fmt.Printf("\033[36m[ValidationError] %v\033[0m\n", validationErrors)
 		_ = dto.Fail(c, http.StatusBadRequest, domain.ErrBadRequest)
 		return
 	}
@@ -36,13 +36,13 @@ func ErrorHandler(err error, c echo.Context) {
 	var echoErr *echo.HTTPError
 	if errors.As(err, &echoErr) {
 		code := mapHTTPStatusToErrorCode(echoErr.Code)
-		fmt.Printf("\n\033[35m[HTTPError] %d | %v\033[0m\n",
+		fmt.Printf("\033[35m[HTTPError] %d | %v\033[0m\n",
 			echoErr.Code, echoErr.Message)
 		_ = dto.Fail(c, echoErr.Code, code)
 		return
 	}
 
-	fmt.Printf("\n\033[31m[UnhandledError] %v\033[0m\n", err)
+	fmt.Printf("\033[31m[UnhandledError] %v\033[0m\n", err)
 	_ = dto.Fail(c, http.StatusInternalServerError, domain.ErrInternalServer)
 }
 

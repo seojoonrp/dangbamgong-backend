@@ -24,7 +24,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	e.HTTPErrorHandler = middleware.ErrorHandler
 
 	e.Use(echoMiddleware.LoggerWithConfig(echoMiddleware.LoggerConfig{
-		Format: "[\033[32m${time_rfc3339}\033[0m] ${status} | ${method} ${uri} | ${latency_human}",
+		Format: "[\033[32m${time_rfc3339}\033[0m] ${status} | ${method} ${uri} | ${latency_human}\n",
 	}))
 	e.Use(echoMiddleware.Recover())
 	e.Use(echoMiddleware.CORSWithConfig(echoMiddleware.CORSConfig{
@@ -53,6 +53,14 @@ func (s *Server) RegisterRoutes() http.Handler {
 	activityGroup.GET("", s.activity.List)
 	activityGroup.POST("", s.activity.Create)
 	activityGroup.DELETE("/:activity_id", s.activity.Delete)
+
+	// User - all protected
+	userGroup := e.Group("/users", middleware.JWTAuth())
+	userGroup.GET("/me", s.user.GetMe)
+	userGroup.PATCH("/me/settings", s.user.UpdateSettings)
+	userGroup.GET("/blocks", s.user.GetBlocks)
+	userGroup.POST("/:user_id/block", s.user.Block)
+	userGroup.POST("/:user_id/unblock", s.user.Unblock)
 
 	return e
 }

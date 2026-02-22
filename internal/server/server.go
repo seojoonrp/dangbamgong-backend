@@ -21,6 +21,7 @@ type Server struct {
 	health   *handler.HealthHandler
 	auth     *handler.AuthHandler
 	activity *handler.ActivityHandler
+	user     *handler.UserHandler
 }
 
 func NewServer() *http.Server {
@@ -44,11 +45,17 @@ func NewServer() *http.Server {
 	activitySvc := service.NewActivityService(activityRepo)
 	activityHandler := handler.NewActivityHandler(activitySvc)
 
+	// User
+	blockRepo := repository.NewBlockRepository(db)
+	userSvc := service.NewUserService(userRepo, blockRepo)
+	userHandler := handler.NewUserHandler(userSvc)
+
 	s := &Server{
 		port:     port,
 		health:   healthHandler,
 		auth:     authHandler,
 		activity: activityHandler,
+		user:     userHandler,
 	}
 
 	server := &http.Server{
