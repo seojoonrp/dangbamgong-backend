@@ -1,0 +1,116 @@
+@host = http://localhost:8080
+
+##########################################################
+# Auth
+##########################################################
+
+### 테스트 로그인 (유저 1)
+# @name login1
+POST {{host}}/auth/login/test
+Content-Type: application/json
+
+{"social_id": "test-user-001"}
+
+### 테스트 로그인 (유저 2) - 차단 테스트용
+# @name login2
+POST {{host}}/auth/login/test
+Content-Type: application/json
+
+{"social_id": "test-user-002"}
+
+### 닉네임 설정
+POST {{host}}/auth/nickname
+Authorization: Bearer {{login1.response.body.$.data.access_token}}
+Content-Type: application/json
+
+{"nickname": "테스트유저"}
+
+##########################################################
+# User
+##########################################################
+
+### 내 프로필 조회 (login1)
+# @name getMe1
+GET {{host}}/users/me
+Authorization: Bearer {{login1.response.body.$.data.access_token}}
+
+### 내 프로필 조회 (login2)
+# @name getMe2
+GET {{host}}/users/me
+Authorization: Bearer {{login2.response.body.$.data.access_token}}
+
+### 알림 설정 변경
+PATCH {{host}}/users/me/settings
+Authorization: Bearer {{login1.response.body.$.data.access_token}}
+Content-Type: application/json
+
+{"void_reminder": true, "reminder_hours": 2}
+
+### 유저 차단 (유저2의 ID를 넣어야 함)
+POST {{host}}/users/{{getMe2.response.body.$.data.id}}/block
+Authorization: Bearer {{login1.response.body.$.data.access_token}}
+
+### 차단 목록 조회
+GET {{host}}/users/blocks
+Authorization: Bearer {{login1.response.body.$.data.access_token}}
+
+### 유저 차단 해제
+POST {{host}}/users/{{getMe2.response.body.$.data.id}}/unblock
+Authorization: Bearer {{login1.response.body.$.data.access_token}}
+
+##########################################################
+# Activity
+##########################################################
+
+### 활동 목록 조회
+GET {{host}}/activities
+Authorization: Bearer {{login1.response.body.$.data.access_token}}
+
+### 활동 추가
+# @name createActivity
+POST {{host}}/activities
+Authorization: Bearer {{login1.response.body.$.data.access_token}}
+Content-Type: application/json
+
+{"name": "클로"}
+
+### 활동 삭제
+DELETE {{host}}/activities/{{createActivity.response.body.$.data.id}}
+Authorization: Bearer {{login1.response.body.$.data.access_token}}
+
+##########################################################
+# Void
+##########################################################
+
+### 공백 시작
+POST {{host}}/void/start
+Authorization: Bearer {{login1.response.body.$.data.access_token}}
+
+### 공백 종료
+POST {{host}}/void/end
+Authorization: Bearer {{login1.response.body.$.data.access_token}}
+Content-Type: application/json
+
+{"activities": []}
+
+### 공백 취소
+POST {{host}}/void/cancel
+Authorization: Bearer {{login1.response.body.$.data.access_token}}
+
+### 테스트 공백 생성 (1시간짜리)
+POST {{host}}/void/test
+Authorization: Bearer {{login1.response.body.$.data.access_token}}
+Content-Type: application/json
+
+{"started_at": "2026-02-22T17:00:00+09:00", "ended_at": "2026-02-22T18:00:00+09:00", "activities": []}
+
+### 공백 기록 조회
+GET {{host}}/void/history?target_day=2026-02-22
+Authorization: Bearer {{login1.response.body.$.data.access_token}}
+
+##########################################################
+# Health
+##########################################################
+
+### Health Check
+GET {{host}}/health

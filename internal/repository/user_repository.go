@@ -17,6 +17,7 @@ type UserRepository interface {
 	Create(ctx context.Context, user *model.User) error
 	UpdateNickname(ctx context.Context, id primitive.ObjectID, nickname string) error
 	UpdateSettings(ctx context.Context, id primitive.ObjectID, settings model.NotificationSettings) error
+	SetVoidState(ctx context.Context, id primitive.ObjectID, isInVoid bool, startedAt *time.Time) error
 	DeleteByID(ctx context.Context, id primitive.ObjectID) error
 }
 
@@ -83,6 +84,20 @@ func (r *userRepository) UpdateSettings(ctx context.Context, id primitive.Object
 
 	_, err := r.coll.UpdateByID(ctx, id, bson.M{
 		"$set": bson.M{"notification_settings": settings, "updated_at": time.Now()},
+	})
+	return err
+}
+
+func (r *userRepository) SetVoidState(ctx context.Context, id primitive.ObjectID, isInVoid bool, startedAt *time.Time) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	_, err := r.coll.UpdateByID(ctx, id, bson.M{
+		"$set": bson.M{
+			"is_in_void":               isInVoid,
+			"current_void_started_at":  startedAt,
+			"updated_at":               time.Now(),
+		},
 	})
 	return err
 }

@@ -62,5 +62,13 @@ func (s *Server) RegisterRoutes() http.Handler {
 	userGroup.POST("/:user_id/block", s.user.Block)
 	userGroup.POST("/:user_id/unblock", s.user.Unblock)
 
+	// Void - all protected
+	voidGroup := e.Group("/void", middleware.JWTAuth())
+	voidGroup.POST("/start", s.void.Start)
+	voidGroup.POST("/end", s.void.End)
+	voidGroup.POST("/cancel", s.void.Cancel)
+	voidGroup.GET("/history", s.void.History)
+	voidGroup.POST("/test", s.void.TestCreate)
+
 	return e
 }

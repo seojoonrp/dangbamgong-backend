@@ -23,6 +23,13 @@ type VoidEndResponse struct {
 	Activities  []string  `json:"activities"`
 }
 
+// POST /void/test - 테스트 공백 데이터 생성
+type TestVoidRequest struct {
+	StartedAt  time.Time `json:"started_at"`
+	EndedAt    time.Time `json:"ended_at"`
+	Activities []string  `json:"activities"`
+}
+
 // GET /void/history
 type VoidHistoryResponse struct {
 	TargetDay        string        `json:"target_day"`
