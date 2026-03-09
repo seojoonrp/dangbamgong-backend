@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"regexp"
 	"time"
 
 	"dangbamgong-backend/internal/domain"
@@ -15,6 +16,7 @@ import (
 type UserService interface {
 	GetMe(ctx context.Context, userID string) (*dto.UserMeResponse, error)
 	UpdateSettings(ctx context.Context, userID string, req dto.UpdateSettingsRequest) (*dto.UpdateSettingsResponse, error)
+	Search(ctx context.Context, userID string, tagPrefix string) (*dto.UserSearchResponse, error)
 	GetBlocks(ctx context.Context, userID string) (*dto.BlockListResponse, error)
 	Block(ctx context.Context, userID string, targetID string) error
 	Unblock(ctx context.Context, userID string, targetID string) error
@@ -97,6 +99,54 @@ func (s *userService) UpdateSettings(ctx context.Context, userID string, req dto
 		ReminderHours: settings.ReminderHours,
 		FriendNudge:   settings.FriendNudge,
 	}, nil
+}
+
+func (s *userService) Search(ctx context.Context, userID string, tagPrefix string) (*dto.UserSearchResponse, error) {
+	oid, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return nil, domain.NewUnauthorized(domain.ErrUnauthorized, "invalid user id")
+	}
+
+	if tagPrefix == "" {
+		return nil, domain.NewBadRequest(domain.ErrBadRequest, "tag prefix is required")
+	}
+
+	// 내가 차단한 유저
+	myBlocks, err := s.blockRepo.FindByUserID(ctx, oid)
+	if err != nil {
+		return nil, domain.NewInternal("failed to find blocks: " + err.Error())
+	}
+
+	// 나를 차단한 유저
+	blockedMe, err := s.blockRepo.FindByBlockedID(ctx, oid)
+	if err != nil {
+		return nil, domain.NewInternal("failed to find blocks: " + err.Error())
+	}
+
+	excludeIDs := []primitive.ObjectID{oid}
+	for _, b := range myBlocks {
+		excludeIDs = append(excludeIDs, b.BlockedID)
+	}
+	for _, b := range blockedMe {
+		excludeIDs = append(excludeIDs, b.UserID)
+	}
+
+	sanitized := regexp.QuoteMeta(tagPrefix)
+	users, err := s.userRepo.SearchByTagPrefix(ctx, sanitized, excludeIDs, 20)
+	if err != nil {
+		return nil, domain.NewInternal("failed to search users: " + err.Error())
+	}
+
+	items := make([]dto.UserSearchItem, len(users))
+	for i, u := range users {
+		items[i] = dto.UserSearchItem{
+			UserID:   u.ID.Hex(),
+			Nickname: u.Nickname,
+			Tag:      u.Tag,
+		}
+	}
+
+	return &dto.UserSearchResponse{Users: items}, nil
 }
 
 func (s *userService) GetBlocks(ctx context.Context, userID string) (*dto.BlockListResponse, error) {

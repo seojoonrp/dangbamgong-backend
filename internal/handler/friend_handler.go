@@ -18,18 +18,6 @@ func NewFriendHandler(s service.FriendService) *FriendHandler {
 	return &FriendHandler{service: s}
 }
 
-func (h *FriendHandler) Search(c echo.Context) error {
-	userID := c.Get(middleware.ContextKeyUserID).(string)
-	tag := c.QueryParam("tag")
-
-	resp, err := h.service.Search(c.Request().Context(), userID, tag)
-	if err != nil {
-		return err
-	}
-
-	return dto.Success(c, http.StatusOK, resp)
-}
-
 func (h *FriendHandler) GetFriends(c echo.Context) error {
 	userID := c.Get(middleware.ContextKeyUserID).(string)
 

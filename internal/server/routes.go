@@ -52,10 +52,12 @@ func (s *Server) RegisterRoutes() http.Handler {
 	activityGroup := e.Group("/activities", middleware.JWTAuth())
 	activityGroup.GET("", s.activity.List)
 	activityGroup.POST("", s.activity.Create)
+	activityGroup.PATCH("/:activity_id", s.activity.UpdateName)
 	activityGroup.DELETE("/:activity_id", s.activity.Delete)
 
 	// User - all protected
 	userGroup := e.Group("/users", middleware.JWTAuth())
+	userGroup.GET("/search", s.user.Search)
 	userGroup.GET("/me", s.user.GetMe)
 	userGroup.PATCH("/me/settings", s.user.UpdateSettings)
 	userGroup.GET("/blocks", s.user.GetBlocks)
@@ -72,7 +74,6 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	// Friend - all protected
 	friendGroup := e.Group("/friends", middleware.JWTAuth())
-	friendGroup.GET("/search", s.friend.Search)
 	friendGroup.GET("", s.friend.GetFriends)
 	friendGroup.DELETE("/:user_id", s.friend.RemoveFriend)
 	friendGroup.GET("/requests", s.friend.GetRequests)

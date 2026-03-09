@@ -8,7 +8,7 @@ import (
 
 type Block struct {
 	ID        primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	UserID    primitive.ObjectID `bson:"user_id" json:"user_id"`
-	BlockedID primitive.ObjectID `bson:"blocked_id" json:"blocked_id"`
-	CreatedAt time.Time          `bson:"created_at" json:"created_at"`
+	UserID    primitive.ObjectID `bson:"user_id" json:"userId"`
+	BlockedID primitive.ObjectID `bson:"blocked_id" json:"blockedId"`
+	CreatedAt time.Time          `bson:"created_at" json:"createdAt"`
 }

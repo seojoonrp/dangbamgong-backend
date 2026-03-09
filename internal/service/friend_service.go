@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"regexp"
 	"time"
 
 	"dangbamgong-backend/internal/domain"
@@ -14,7 +13,6 @@ import (
 )
 
 type FriendService interface {
-	Search(ctx context.Context, userID string, tagPrefix string) (*dto.FriendSearchResponse, error)
 	GetFriends(ctx context.Context, userID string) (*dto.FriendListResponse, error)
 	RemoveFriend(ctx context.Context, userID string, targetID string) error
 	GetRequests(ctx context.Context, userID string, requestType string) (interface{}, error)
@@ -43,54 +41,6 @@ func NewFriendService(
 		friendshipRepo:    fr,
 		friendRequestRepo: frr,
 	}
-}
-
-func (s *friendService) Search(ctx context.Context, userID string, tagPrefix string) (*dto.FriendSearchResponse, error) {
-	oid, err := primitive.ObjectIDFromHex(userID)
-	if err != nil {
-		return nil, domain.NewUnauthorized(domain.ErrUnauthorized, "invalid user id")
-	}
-
-	if tagPrefix == "" {
-		return nil, domain.NewBadRequest(domain.ErrBadRequest, "tag prefix is required")
-	}
-
-	// 내가 차단한 유저
-	myBlocks, err := s.blockRepo.FindByUserID(ctx, oid)
-	if err != nil {
-		return nil, domain.NewInternal("failed to find blocks: " + err.Error())
-	}
-
-	// 나를 차단한 유저
-	blockedMe, err := s.blockRepo.FindByBlockedID(ctx, oid)
-	if err != nil {
-		return nil, domain.NewInternal("failed to find blocks: " + err.Error())
-	}
-
-	excludeIDs := []primitive.ObjectID{oid}
-	for _, b := range myBlocks {
-		excludeIDs = append(excludeIDs, b.BlockedID)
-	}
-	for _, b := range blockedMe {
-		excludeIDs = append(excludeIDs, b.UserID)
-	}
-
-	sanitized := regexp.QuoteMeta(tagPrefix)
-	users, err := s.userRepo.SearchByTagPrefix(ctx, sanitized, excludeIDs, 20)
-	if err != nil {
-		return nil, domain.NewInternal("failed to search users: " + err.Error())
-	}
-
-	items := make([]dto.FriendSearchItem, len(users))
-	for i, u := range users {
-		items[i] = dto.FriendSearchItem{
-			UserID:   u.ID.Hex(),
-			Nickname: u.Nickname,
-			Tag:      u.Tag,
-		}
-	}
-
-	return &dto.FriendSearchResponse{Users: items}, nil
 }
 
 func (s *friendService) GetFriends(ctx context.Context, userID string) (*dto.FriendListResponse, error) {
@@ -216,7 +166,7 @@ func (s *friendService) getReceivedRequests(ctx context.Context, userID primitiv
 		}
 		items = append(items, dto.ReceivedRequestItem{
 			RequestID: r.ID.Hex(),
-			Sender: dto.FriendSearchItem{
+			Sender: dto.UserSearchItem{
 				UserID:   u.ID.Hex(),
 				Nickname: u.Nickname,
 				Tag:      u.Tag,
@@ -261,7 +211,7 @@ func (s *friendService) getSentRequests(ctx context.Context, userID primitive.Ob
 		}
 		items = append(items, dto.SentRequestItem{
 			RequestID: r.ID.Hex(),
-			Receiver: dto.FriendSearchItem{
+			Receiver: dto.UserSearchItem{
 				UserID:   u.ID.Hex(),
 				Nickname: u.Nickname,
 				Tag:      u.Tag,

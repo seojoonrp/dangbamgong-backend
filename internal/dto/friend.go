@@ -2,28 +2,17 @@ package dto
 
 import "time"
 
-// GET /friends/search
-type FriendSearchResponse struct {
-	Users []FriendSearchItem `json:"users"`
-}
-
-type FriendSearchItem struct {
-	UserID   string `json:"user_id"`
-	Nickname string `json:"nickname"`
-	Tag      string `json:"tag"`
-}
-
 // GET /friends
 type FriendListResponse struct {
 	Friends []FriendItem `json:"friends"`
 }
 
 type FriendItem struct {
-	UserID    string    `json:"user_id"`
+	UserID    string    `json:"userId"`
 	Nickname  string    `json:"nickname"`
 	Tag       string    `json:"tag"`
-	IsInVoid  bool      `json:"is_in_void"`
-	CreatedAt time.Time `json:"created_at"`
+	IsInVoid  bool      `json:"isInVoid"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
 // GET /friends/requests?type=received
@@ -32,9 +21,9 @@ type ReceivedRequestsResponse struct {
 }
 
 type ReceivedRequestItem struct {
-	RequestID string           `json:"request_id"`
-	Sender    FriendSearchItem `json:"sender"`
-	CreatedAt time.Time        `json:"created_at"`
+	RequestID string         `json:"requestId"`
+	Sender    UserSearchItem `json:"sender"`
+	CreatedAt time.Time      `json:"createdAt"`
 }
 
 // GET /friends/requests?type=sent
@@ -43,17 +32,17 @@ type SentRequestsResponse struct {
 }
 
 type SentRequestItem struct {
-	RequestID string           `json:"request_id"`
-	Receiver  FriendSearchItem `json:"receiver"`
-	Status    string           `json:"status"`
-	CreatedAt time.Time        `json:"created_at"`
+	RequestID string         `json:"requestId"`
+	Receiver  UserSearchItem `json:"receiver"`
+	Status    string         `json:"status"`
+	CreatedAt time.Time      `json:"createdAt"`
 }
 
 // POST /friends/requests
 type SendFriendRequestRequest struct {
-	ReceiverID string `json:"receiver_id" validate:"required"`
+	ReceiverID string `json:"receiverId" validate:"required"`
 }
 
 type SendFriendRequestResponse struct {
-	RequestID string `json:"request_id"`
+	RequestID string `json:"requestId"`
 }

@@ -45,6 +45,22 @@ func (h *ActivityHandler) Create(c echo.Context) error {
 	return dto.Success(c, http.StatusCreated, resp)
 }
 
+func (h *ActivityHandler) UpdateName(c echo.Context) error {
+	userID := c.Get(middleware.ContextKeyUserID).(string)
+	activityID := c.Param("activity_id")
+
+	var req dto.UpdateActivityRequest
+	if err := c.Bind(&req); err != nil {
+		return err
+	}
+
+	if err := h.service.UpdateName(c.Request().Context(), userID, activityID, req.Name); err != nil {
+		return err
+	}
+
+	return dto.SuccessEmpty(c, http.StatusOK)
+}
+
 func (h *ActivityHandler) Delete(c echo.Context) error {
 	userID := c.Get(middleware.ContextKeyUserID).(string)
 	activityID := c.Param("activity_id")

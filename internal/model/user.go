@@ -16,21 +16,21 @@ const (
 )
 
 type NotificationSettings struct {
-	VoidReminder  bool `bson:"void_reminder"   json:"void_reminder"`
-	ReminderHours int  `bson:"reminder_hours"  json:"reminder_hours"`
-	FriendNudge   bool `bson:"friend_nudge"    json:"friend_nudge"`
+	VoidReminder  bool `bson:"void_reminder"   json:"voidReminder"`
+	ReminderHours int  `bson:"reminder_hours"  json:"reminderHours"`
+	FriendNudge   bool `bson:"friend_nudge"    json:"friendNudge"`
 }
 
 type User struct {
 	ID                   primitive.ObjectID   `bson:"_id,omitempty" json:"id"`
-	SocialProvider       SocialProvider       `bson:"social_provider" json:"social_provider"`
-	SocialID             string               `bson:"social_id" json:"social_id"`
+	SocialProvider       SocialProvider       `bson:"social_provider" json:"socialProvider"`
+	SocialID             string               `bson:"social_id" json:"socialId"`
 	Nickname             string               `bson:"nickname" json:"nickname,omitempty"`
 	Tag                  string               `bson:"tag" json:"tag"`
-	IsInVoid             bool                 `bson:"is_in_void" json:"is_in_void"`
-	CurrentVoidStartedAt *time.Time           `bson:"current_void_started_at,omitempty" json:"current_void_started_at"`
-	NotificationSettings NotificationSettings `bson:"notification_settings" json:"notification_settings"`
+	IsInVoid             bool                 `bson:"is_in_void" json:"isInVoid"`
+	CurrentVoidStartedAt *time.Time           `bson:"current_void_started_at,omitempty" json:"currentVoidStartedAt"`
+	NotificationSettings NotificationSettings `bson:"notification_settings" json:"notificationSettings"`
 	AppleRefreshToken    string               `bson:"apple_refresh_token,omitempty" json:"-"`
-	CreatedAt            time.Time            `bson:"created_at" json:"created_at"`
-	UpdatedAt            time.Time            `bson:"updated_at" json:"updated_at"`
+	CreatedAt            time.Time            `bson:"created_at" json:"createdAt"`
+	UpdatedAt            time.Time            `bson:"updated_at" json:"updatedAt"`
 }

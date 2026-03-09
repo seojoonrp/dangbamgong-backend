@@ -16,9 +16,9 @@ const (
 
 type FriendRequest struct {
 	ID         primitive.ObjectID  `bson:"_id,omitempty" json:"id"`
-	SenderID   primitive.ObjectID  `bson:"sender_id" json:"sender_id"`
-	ReceiverID primitive.ObjectID  `bson:"receiver_id" json:"receiver_id"`
+	SenderID   primitive.ObjectID  `bson:"sender_id" json:"senderId"`
+	ReceiverID primitive.ObjectID  `bson:"receiver_id" json:"receiverId"`
 	Status     FriendRequestStatus `bson:"status" json:"status"`
-	CreatedAt  time.Time           `bson:"created_at" json:"created_at"`
-	UpdatedAt  time.Time           `bson:"updated_at" json:"updated_at"`
+	CreatedAt  time.Time           `bson:"created_at" json:"createdAt"`
+	UpdatedAt  time.Time           `bson:"updated_at" json:"updatedAt"`
 }

@@ -7,28 +7,28 @@ type UserMeResponse struct {
 	ID                   string               `json:"id"`
 	Tag                  string               `json:"tag"`
 	Nickname             string               `json:"nickname"`
-	IsInVoid             bool                 `json:"is_in_void"`
-	CurrentVoidStartedAt *time.Time           `json:"current_void_started_at"`
-	NotificationSettings NotificationSettings `json:"notification_settings"`
+	IsInVoid             bool                 `json:"isInVoid"`
+	CurrentVoidStartedAt *time.Time           `json:"currentVoidStartedAt"`
+	NotificationSettings NotificationSettings `json:"notificationSettings"`
 }
 
 type NotificationSettings struct {
-	VoidReminder  bool `json:"void_reminder"`
-	ReminderHours int  `json:"reminder_hours"`
-	FriendNudge   bool `json:"friend_nudge"`
+	VoidReminder  bool `json:"voidReminder"`
+	ReminderHours int  `json:"reminderHours"`
+	FriendNudge   bool `json:"friendNudge"`
 }
 
 // PATCH /users/me/settings
 type UpdateSettingsRequest struct {
-	VoidReminder  *bool `json:"void_reminder"`
-	ReminderHours *int  `json:"reminder_hours"`
-	FriendNudge   *bool `json:"friend_nudge"`
+	VoidReminder  *bool `json:"voidReminder"`
+	ReminderHours *int  `json:"reminderHours"`
+	FriendNudge   *bool `json:"friendNudge"`
 }
 
 type UpdateSettingsResponse struct {
-	VoidReminder  bool `json:"void_reminder"`
-	ReminderHours int  `json:"reminder_hours"`
-	FriendNudge   bool `json:"friend_nudge"`
+	VoidReminder  bool `json:"voidReminder"`
+	ReminderHours int  `json:"reminderHours"`
+	FriendNudge   bool `json:"friendNudge"`
 }
 
 // GET /users/blocks
@@ -36,9 +36,20 @@ type BlockListResponse struct {
 	Blocks []BlockItem `json:"blocks"`
 }
 
+// GET /users/search
+type UserSearchResponse struct {
+	Users []UserSearchItem `json:"users"`
+}
+
+type UserSearchItem struct {
+	UserID   string `json:"userId"`
+	Nickname string `json:"nickname"`
+	Tag      string `json:"tag"`
+}
+
 type BlockItem struct {
-	UserID    string    `json:"user_id"`
+	UserID    string    `json:"userId"`
 	Nickname  string    `json:"nickname"`
 	Tag       string    `json:"tag"`
-	BlockedAt time.Time `json:"blocked_at"`
+	BlockedAt time.Time `json:"blockedAt"`
 }

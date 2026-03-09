@@ -19,6 +19,7 @@ type ActivityRepository interface {
 	Create(ctx context.Context, activity *model.Activity) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
 	DeleteByUserID(ctx context.Context, userID primitive.ObjectID) error
+	UpdateName(ctx context.Context, id primitive.ObjectID, name string) error
 	IncrementUsage(ctx context.Context, id primitive.ObjectID, usedAt time.Time) error
 }
 
@@ -102,6 +103,16 @@ func (r *activityRepository) DeleteByUserID(ctx context.Context, userID primitiv
 	defer cancel()
 
 	_, err := r.coll.DeleteMany(ctx, bson.M{"user_id": userID})
+	return err
+}
+
+func (r *activityRepository) UpdateName(ctx context.Context, id primitive.ObjectID, name string) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	_, err := r.coll.UpdateByID(ctx, id, bson.M{
+		"$set": bson.M{"name": name},
+	})
 	return err
 }
 

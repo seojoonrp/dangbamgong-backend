@@ -18,6 +18,18 @@ func NewUserHandler(s service.UserService) *UserHandler {
 	return &UserHandler{service: s}
 }
 
+func (h *UserHandler) Search(c echo.Context) error {
+	userID := c.Get(middleware.ContextKeyUserID).(string)
+	tag := c.QueryParam("tag")
+
+	resp, err := h.service.Search(c.Request().Context(), userID, tag)
+	if err != nil {
+		return err
+	}
+
+	return dto.Success(c, http.StatusOK, resp)
+}
+
 func (h *UserHandler) GetMe(c echo.Context) error {
 	userID := c.Get(middleware.ContextKeyUserID).(string)
 
