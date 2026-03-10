@@ -14,8 +14,10 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+const bucketInterval = 20 * time.Minute
+
 type StatService interface {
-	GetLiveStat(ctx context.Context) (*dto.LiveStatResponse, error)
+	GetHomeStat(ctx context.Context, userID string) (*dto.HomeStatResponse, error)
 	GetDailyStat(ctx context.Context, userID string, targetDay string) (*dto.DailyStatResponse, error)
 }
 
@@ -34,7 +36,12 @@ func NewStatService(
 	}
 }
 
-func (s *statService) GetLiveStat(ctx context.Context) (*dto.LiveStatResponse, error) {
+func (s *statService) GetHomeStat(ctx context.Context, userID string) (*dto.HomeStatResponse, error) {
+	oid, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return nil, domain.NewUnauthorized(domain.ErrUnauthorized, "invalid user id")
+	}
+
 	currentCount, err := s.statRepo.CountCurrentVoid(ctx)
 	if err != nil {
 		return nil, domain.NewInternal("failed to count current void: " + err.Error())
@@ -46,10 +53,29 @@ func (s *statService) GetLiveStat(ctx context.Context) (*dto.LiveStatResponse, e
 		return nil, domain.NewInternal("failed to count today slept: " + err.Error())
 	}
 
-	return &dto.LiveStatResponse{
+	resp := &dto.HomeStatResponse{
 		CurrentVoidCount: currentCount,
 		TodaySleptCount:  sleptCount,
-	}, nil
+	}
+
+	// 유저의 오늘 랭킹 계산
+	durations, err := s.statRepo.GetUserDurations(ctx, today)
+	if err != nil {
+		return nil, domain.NewInternal("failed to get user durations: " + err.Error())
+	}
+
+	for i, d := range durations {
+		if d.UserID == oid {
+			rank := i + 1
+			total := len(durations)
+			resp.MyTotalDurationSec = &d.TotalDurSec
+			resp.MyRank = &rank
+			resp.TotalSleptUsers = &total
+			break
+		}
+	}
+
+	return resp, nil
 }
 
 func (s *statService) GetDailyStat(ctx context.Context, userID string, targetDay string) (*dto.DailyStatResponse, error) {
@@ -103,7 +129,7 @@ func (s *statService) GetDailyStat(ctx context.Context, userID string, targetDay
 		}
 	}
 
-	// 유저 본인의 세션으로 is_mine 계산
+	// 유저 본인의 세션으로 is_mine 계산 + 세션 목록 반환
 	mySessions, err := s.voidSessionRepo.FindByUserIDAndTargetDay(ctx, oid, targetDay)
 	if err != nil {
 		return nil, domain.NewInternal("failed to find user sessions: " + err.Error())
@@ -118,37 +144,24 @@ func (s *statService) GetDailyStat(ctx context.Context, userID string, targetDay
 		}
 	}
 
-	// 랭킹 계산
-	var myRank *int
-	var totalUsers *int
-
-	durations, err := s.statRepo.GetUserDurations(ctx, targetDay)
-	if err != nil {
-		return nil, domain.NewInternal("failed to get user durations: " + err.Error())
-	}
-
-	if len(durations) > 0 {
-		total := len(durations)
-		totalUsers = &total
-
-		for i, d := range durations {
-			if d.UserID == oid {
-				rank := i + 1
-				myRank = &rank
-				break
-			}
+	// 세션 목록을 DTO로 변환
+	sessionItems := make([]dto.VoidSessionItem, len(mySessions))
+	for i, s := range mySessions {
+		sessionItems[i] = dto.VoidSessionItem{
+			StartedAt:  s.StartedAt,
+			EndedAt:    s.EndedAt,
+			Activities: s.Activities,
 		}
 	}
 
 	return &dto.DailyStatResponse{
 		TargetDay:  targetDay,
 		Buckets:    bucketItems,
-		MyRank:     myRank,
-		TotalUsers: totalUsers,
+		MySessions: sessionItems,
 	}, nil
 }
 
-// generateBuckets 는 targetDay의 16:00부터 현재 시간 직전 완료된 10분 버킷까지의 버킷 키를 생성한다.
+// generateBuckets 는 targetDay의 16:00부터 현재 시간 직전 완료된 20분 버킷까지의 버킷 키를 생성한다.
 func generateBuckets(targetDay string, now time.Time) []string {
 	dayStart, err := time.ParseInLocation("2006-01-02", targetDay, config.KST)
 	if err != nil {
@@ -156,12 +169,12 @@ func generateBuckets(targetDay string, now time.Time) []string {
 	}
 	dayStart = dayStart.Add(time.Duration(config.DayStartHour) * time.Hour)
 
-	// 마지막 완료 버킷: now를 10분 단위로 내림 후 10분 빼기
+	// 마지막 완료 버킷: now를 20분 단위로 내림 후 20분 빼기
 	nowKST := now.In(config.KST)
-	lastComplete := nowKST.Truncate(10 * time.Minute).Add(-10 * time.Minute)
+	lastComplete := nowKST.Truncate(bucketInterval).Add(-bucketInterval)
 
-	// 과거 날짜면 다음날 15:50까지 (최대 144버킷)
-	dayEnd := dayStart.Add(24 * time.Hour).Add(-10 * time.Minute) // 다음날 15:50
+	// 과거 날짜면 다음날 15:40까지 (최대 72버킷)
+	dayEnd := dayStart.Add(24 * time.Hour).Add(-bucketInterval)
 	if lastComplete.After(dayEnd) {
 		lastComplete = dayEnd
 	}
@@ -171,7 +184,7 @@ func generateBuckets(targetDay string, now time.Time) []string {
 	}
 
 	var buckets []string
-	for t := dayStart; !t.After(lastComplete); t = t.Add(10 * time.Minute) {
+	for t := dayStart; !t.After(lastComplete); t = t.Add(bucketInterval) {
 		buckets = append(buckets, formatBucketKey(t))
 	}
 	return buckets
@@ -190,7 +203,7 @@ func computeBucketCounts(targetDay string, buckets []string, sessions []model.Vo
 			if bucketTime.IsZero() {
 				continue
 			}
-			bucketEnd := bucketTime.Add(10 * time.Minute)
+			bucketEnd := bucketTime.Add(bucketInterval)
 
 			// 세션이 버킷과 겹치는지: started_at < bucket_end AND ended_at > bucket_start
 			if session.StartedAt.Before(bucketEnd) && session.EndedAt.After(bucketTime) {
@@ -218,7 +231,7 @@ func isUserInBucket(bucket string, sessions []model.VoidSession) bool {
 	if bucketTime.IsZero() {
 		return false
 	}
-	bucketEnd := bucketTime.Add(10 * time.Minute)
+	bucketEnd := bucketTime.Add(bucketInterval)
 
 	for _, session := range sessions {
 		if session.StartedAt.Before(bucketEnd) && session.EndedAt.After(bucketTime) {

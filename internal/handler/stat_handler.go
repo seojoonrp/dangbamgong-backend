@@ -18,8 +18,10 @@ func NewStatHandler(s service.StatService) *StatHandler {
 	return &StatHandler{service: s}
 }
 
-func (h *StatHandler) GetLiveStat(c echo.Context) error {
-	resp, err := h.service.GetLiveStat(c.Request().Context())
+func (h *StatHandler) GetHomeStat(c echo.Context) error {
+	userID := c.Get(middleware.ContextKeyUserID).(string)
+
+	resp, err := h.service.GetHomeStat(c.Request().Context(), userID)
 	if err != nil {
 		return err
 	}

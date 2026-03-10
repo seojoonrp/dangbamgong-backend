@@ -84,7 +84,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	// Stat - all protected
 	statGroup := e.Group("/stats", middleware.JWTAuth())
-	statGroup.GET("/live", s.stat.GetLiveStat)
+	statGroup.GET("/home", s.stat.GetHomeStat)
 	statGroup.GET("/daily", s.stat.GetDailyStat)
 
 	return e
