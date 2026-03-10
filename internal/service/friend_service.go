@@ -80,11 +80,12 @@ func (s *friendService) GetFriends(ctx context.Context, userID string) (*dto.Fri
 			continue
 		}
 		items = append(items, dto.FriendItem{
-			UserID:    u.ID.Hex(),
-			Nickname:  u.Nickname,
-			Tag:       u.Tag,
-			IsInVoid:  u.IsInVoid,
-			CreatedAt: f.CreatedAt,
+			UserID:          u.ID.Hex(),
+			Nickname:        u.Nickname,
+			Tag:             u.Tag,
+			IsInVoid:        u.IsInVoid,
+			LastVoidEndedAt: u.LastVoidEndedAt,
+			CreatedAt:       f.CreatedAt,
 		})
 	}
 

@@ -55,7 +55,7 @@ func (s *voidService) Start(ctx context.Context, userID string) (*dto.VoidStartR
 	}
 
 	now := time.Now()
-	if err := s.userRepo.SetVoidState(ctx, oid, true, &now); err != nil {
+	if err := s.userRepo.SetVoidState(ctx, oid, true, &now, nil); err != nil {
 		return nil, domain.NewInternal("failed to set void state: " + err.Error())
 	}
 
@@ -118,7 +118,7 @@ func (s *voidService) End(ctx context.Context, userID string, req dto.VoidEndReq
 		return nil, domain.NewInternal("failed to create void session: " + err.Error())
 	}
 
-	if err := s.userRepo.SetVoidState(ctx, oid, false, nil); err != nil {
+	if err := s.userRepo.SetVoidState(ctx, oid, false, nil, &now); err != nil {
 		return nil, domain.NewInternal("failed to reset void state: " + err.Error())
 	}
 
@@ -147,7 +147,7 @@ func (s *voidService) Cancel(ctx context.Context, userID string) error {
 		return domain.NewBadRequest(domain.ErrNotInVoid, "not in void")
 	}
 
-	if err := s.userRepo.SetVoidState(ctx, oid, false, nil); err != nil {
+	if err := s.userRepo.SetVoidState(ctx, oid, false, nil, nil); err != nil {
 		return domain.NewInternal("failed to reset void state: " + err.Error())
 	}
 
@@ -206,6 +206,11 @@ func (s *voidService) TestCreate(ctx context.Context, userID string, req dto.Tes
 
 	if err := s.voidSessionRepo.Create(ctx, session); err != nil {
 		return nil, domain.NewInternal("failed to create test void session: " + err.Error())
+	}
+
+	endedAt := req.EndedAt
+	if err := s.userRepo.SetVoidState(ctx, oid, false, nil, &endedAt); err != nil {
+		return nil, domain.NewInternal("failed to update last void ended at: " + err.Error())
 	}
 
 	return &dto.VoidEndResponse{

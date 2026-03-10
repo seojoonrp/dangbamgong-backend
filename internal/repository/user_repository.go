@@ -18,7 +18,7 @@ type UserRepository interface {
 	Create(ctx context.Context, user *model.User) error
 	UpdateNickname(ctx context.Context, id primitive.ObjectID, nickname string) error
 	UpdateSettings(ctx context.Context, id primitive.ObjectID, settings model.NotificationSettings) error
-	SetVoidState(ctx context.Context, id primitive.ObjectID, isInVoid bool, startedAt *time.Time) error
+	SetVoidState(ctx context.Context, id primitive.ObjectID, isInVoid bool, startedAt *time.Time, lastVoidEndedAt *time.Time) error
 	DeleteByID(ctx context.Context, id primitive.ObjectID) error
 	SearchByTagPrefix(ctx context.Context, prefix string, excludeIDs []primitive.ObjectID, limit int) ([]model.User, error)
 	FindByIDs(ctx context.Context, ids []primitive.ObjectID) ([]model.User, error)
@@ -91,17 +91,20 @@ func (r *userRepository) UpdateSettings(ctx context.Context, id primitive.Object
 	return err
 }
 
-func (r *userRepository) SetVoidState(ctx context.Context, id primitive.ObjectID, isInVoid bool, startedAt *time.Time) error {
+func (r *userRepository) SetVoidState(ctx context.Context, id primitive.ObjectID, isInVoid bool, startedAt *time.Time, lastVoidEndedAt *time.Time) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	_, err := r.coll.UpdateByID(ctx, id, bson.M{
-		"$set": bson.M{
-			"is_in_void":               isInVoid,
-			"current_void_started_at":  startedAt,
-			"updated_at":               time.Now(),
-		},
-	})
+	fields := bson.M{
+		"is_in_void":              isInVoid,
+		"current_void_started_at": startedAt,
+		"updated_at":              time.Now(),
+	}
+	if lastVoidEndedAt != nil {
+		fields["last_void_ended_at"] = lastVoidEndedAt
+	}
+
+	_, err := r.coll.UpdateByID(ctx, id, bson.M{"$set": fields})
 	return err
 }
 

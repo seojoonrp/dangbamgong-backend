@@ -29,6 +29,7 @@ type User struct {
 	Tag                  string               `bson:"tag" json:"tag"`
 	IsInVoid             bool                 `bson:"is_in_void" json:"isInVoid"`
 	CurrentVoidStartedAt *time.Time           `bson:"current_void_started_at,omitempty" json:"currentVoidStartedAt"`
+	LastVoidEndedAt      *time.Time           `bson:"last_void_ended_at,omitempty" json:"lastVoidEndedAt"`
 	NotificationSettings NotificationSettings `bson:"notification_settings" json:"notificationSettings"`
 	AppleRefreshToken    string               `bson:"apple_refresh_token,omitempty" json:"-"`
 	CreatedAt            time.Time            `bson:"created_at" json:"createdAt"`

@@ -8,11 +8,12 @@ type FriendListResponse struct {
 }
 
 type FriendItem struct {
-	UserID    string    `json:"userId"`
-	Nickname  string    `json:"nickname"`
-	Tag       string    `json:"tag"`
-	IsInVoid  bool      `json:"isInVoid"`
-	CreatedAt time.Time `json:"createdAt"`
+	UserID          string     `json:"userId"`
+	Nickname        string     `json:"nickname"`
+	Tag             string     `json:"tag"`
+	IsInVoid        bool       `json:"isInVoid"`
+	LastVoidEndedAt *time.Time `json:"lastVoidEndedAt"`
+	CreatedAt       time.Time  `json:"createdAt"`
 }
 
 // GET /friends/requests?type=received
