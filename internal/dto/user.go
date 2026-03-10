@@ -15,6 +15,7 @@ type UserMeResponse struct {
 type NotificationSettings struct {
 	VoidReminder  bool `json:"voidReminder"`
 	ReminderHours int  `json:"reminderHours"`
+	FriendRequest bool `json:"friendRequest"`
 	FriendNudge   bool `json:"friendNudge"`
 }
 
@@ -22,12 +23,14 @@ type NotificationSettings struct {
 type UpdateSettingsRequest struct {
 	VoidReminder  *bool `json:"voidReminder"`
 	ReminderHours *int  `json:"reminderHours"`
+	FriendRequest *bool `json:"friendRequest"`
 	FriendNudge   *bool `json:"friendNudge"`
 }
 
 type UpdateSettingsResponse struct {
 	VoidReminder  bool `json:"voidReminder"`
 	ReminderHours int  `json:"reminderHours"`
+	FriendRequest bool `json:"friendRequest"`
 	FriendNudge   bool `json:"friendNudge"`
 }
 

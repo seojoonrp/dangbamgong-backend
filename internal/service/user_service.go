@@ -63,6 +63,7 @@ func (s *userService) GetMe(ctx context.Context, userID string) (*dto.UserMeResp
 		NotificationSettings: dto.NotificationSettings{
 			VoidReminder:  user.NotificationSettings.VoidReminder,
 			ReminderHours: user.NotificationSettings.ReminderHours,
+			FriendRequest: user.NotificationSettings.FriendRequest,
 			FriendNudge:   user.NotificationSettings.FriendNudge,
 		},
 	}, nil
@@ -89,6 +90,9 @@ func (s *userService) UpdateSettings(ctx context.Context, userID string, req dto
 	if req.FriendNudge != nil {
 		settings.FriendNudge = *req.FriendNudge
 	}
+	if req.FriendRequest != nil {
+		settings.FriendRequest = *req.FriendRequest
+	}
 
 	if err := s.userRepo.UpdateSettings(ctx, oid, settings); err != nil {
 		return nil, domain.NewInternal("failed to update settings: " + err.Error())
@@ -98,6 +102,7 @@ func (s *userService) UpdateSettings(ctx context.Context, userID string, req dto
 		VoidReminder:  settings.VoidReminder,
 		ReminderHours: settings.ReminderHours,
 		FriendNudge:   settings.FriendNudge,
+		FriendRequest: settings.FriendRequest,
 	}, nil
 }
 

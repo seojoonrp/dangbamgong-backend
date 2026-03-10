@@ -18,6 +18,7 @@ const (
 type NotificationSettings struct {
 	VoidReminder  bool `bson:"void_reminder"   json:"voidReminder"`
 	ReminderHours int  `bson:"reminder_hours"  json:"reminderHours"`
+	FriendRequest bool `bson:"friend_request"  json:"friendRequest"`
 	FriendNudge   bool `bson:"friend_nudge"    json:"friendNudge"`
 }
 

@@ -67,12 +67,29 @@ func (s *authService) findOrCreateAndGenerateToken(
 	isNewUser := false
 	if user == nil {
 		isNewUser = true
-		tag, err := generateTag(8)
+		tag, err := generateTag(10)
 		if err != nil {
 			return nil, domain.NewInternal("failed to generate tag: " + err.Error())
 		}
 
-		// TODO: 아주아주아주 극악의 확률로 태그 충돌이 발생했을 때 처리... 근데 필요없을듯
+		existingUser, err := s.userRepo.FindByTag(ctx, tag)
+		if err != nil {
+			return nil, domain.NewInternal("failed to check existing tag: " + err.Error())
+		}
+		if existingUser != nil {
+			tag, err = generateTag(10)
+			if err != nil {
+				return nil, domain.NewInternal("failed to generate tag: " + err.Error())
+			}
+
+			existingUser, err = s.userRepo.FindByTag(ctx, tag)
+			if err != nil {
+				return nil, domain.NewInternal("failed to check existing tag: " + err.Error())
+			}
+			if existingUser != nil {
+				return nil, domain.NewInternal("failed to generate unique tag")
+			}
+		}
 
 		now := time.Now()
 		user = &model.User{
@@ -80,9 +97,10 @@ func (s *authService) findOrCreateAndGenerateToken(
 			SocialID:       socialID,
 			Tag:            tag,
 			NotificationSettings: model.NotificationSettings{
-				VoidReminder:  false,
+				VoidReminder:  true,
 				ReminderHours: 1,
-				FriendNudge:   false,
+				FriendRequest: true,
+				FriendNudge:   true,
 			},
 			AppleRefreshToken: appleRefreshToken,
 			CreatedAt:         now,
@@ -106,8 +124,8 @@ func (s *authService) findOrCreateAndGenerateToken(
 
 func (s *authService) SetNickname(ctx context.Context, userID string, req dto.SetNicknameRequest) (*dto.SetNicknameResponse, error) {
 	length := utf8.RuneCountInString(req.Nickname)
-	if length < 3 || length > 20 {
-		return nil, domain.NewBadRequest(domain.ErrInvalidNickname, "nickname must be 3-20 characters")
+	if length < 3 || length > 15 {
+		return nil, domain.NewBadRequest(domain.ErrInvalidNickname, "nickname must be 3-15 characters")
 	}
 
 	oid, err := primitive.ObjectIDFromHex(userID)
@@ -153,7 +171,7 @@ func (s *authService) Withdraw(ctx context.Context, userID string) error {
 }
 
 func generateTag(length int) (string, error) {
-	const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+	const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	b := make([]byte, length)
 	for i := range b {
 		n, err := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))

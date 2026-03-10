@@ -15,6 +15,7 @@ import (
 type UserRepository interface {
 	FindBySocial(ctx context.Context, provider model.SocialProvider, socialID string) (*model.User, error)
 	FindByID(ctx context.Context, id primitive.ObjectID) (*model.User, error)
+	FindByTag(ctx context.Context, tag string) (*model.User, error)
 	Create(ctx context.Context, user *model.User) error
 	UpdateNickname(ctx context.Context, id primitive.ObjectID, nickname string) error
 	UpdateSettings(ctx context.Context, id primitive.ObjectID, settings model.NotificationSettings) error
@@ -53,6 +54,18 @@ func (r *userRepository) FindByID(ctx context.Context, id primitive.ObjectID) (*
 
 	var user model.User
 	err := r.coll.FindOne(ctx, bson.M{"_id": id}).Decode(&user)
+	if err == mongo.ErrNoDocuments {
+		return nil, nil
+	}
+	return &user, err
+}
+
+func (r *userRepository) FindByTag(ctx context.Context, tag string) (*model.User, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	var user model.User
+	err := r.coll.FindOne(ctx, bson.M{"tag": tag}).Decode(&user)
 	if err == mongo.ErrNoDocuments {
 		return nil, nil
 	}
