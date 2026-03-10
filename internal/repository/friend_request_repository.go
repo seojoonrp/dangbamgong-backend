@@ -19,6 +19,7 @@ type FriendRequestRepository interface {
 	FindBySenderID(ctx context.Context, senderID primitive.ObjectID) ([]model.FriendRequest, error)
 	Create(ctx context.Context, req *model.FriendRequest) error
 	UpdateStatus(ctx context.Context, id primitive.ObjectID, status model.FriendRequestStatus) error
+	DeleteByID(ctx context.Context, id primitive.ObjectID) error
 	DeleteByUserPair(ctx context.Context, userA, userB primitive.ObjectID) error
 	DeleteByUserID(ctx context.Context, userID primitive.ObjectID) error
 }
@@ -84,8 +85,17 @@ func (r *friendRequestRepository) FindBySenderID(ctx context.Context, senderID p
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
+	sevenDaysAgo := time.Now().AddDate(0, 0, -7)
+	filter := bson.M{
+		"sender_id": senderID,
+		"$or": bson.A{
+			bson.M{"status": model.FriendRequestPending},
+			bson.M{"status": model.FriendRequestRejected, "updated_at": bson.M{"$gte": sevenDaysAgo}},
+		},
+	}
+
 	opts := options.Find().SetSort(bson.D{{Key: "created_at", Value: -1}})
-	cursor, err := r.coll.Find(ctx, bson.M{"sender_id": senderID}, opts)
+	cursor, err := r.coll.Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -117,6 +127,14 @@ func (r *friendRequestRepository) UpdateStatus(ctx context.Context, id primitive
 	_, err := r.coll.UpdateByID(ctx, id, bson.M{
 		"$set": bson.M{"status": status, "updated_at": time.Now()},
 	})
+	return err
+}
+
+func (r *friendRequestRepository) DeleteByID(ctx context.Context, id primitive.ObjectID) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	_, err := r.coll.DeleteOne(ctx, bson.M{"_id": id})
 	return err
 }
 

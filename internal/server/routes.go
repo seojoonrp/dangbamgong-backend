@@ -80,6 +80,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	friendGroup.POST("/requests", s.friend.SendRequest)
 	friendGroup.POST("/requests/:request_id/accept", s.friend.AcceptRequest)
 	friendGroup.POST("/requests/:request_id/reject", s.friend.RejectRequest)
+	friendGroup.DELETE("/requests/:request_id", s.friend.DeleteRequest)
 	friendGroup.POST("/:user_id/nudge", s.friend.Nudge)
 
 	// Stat - all protected

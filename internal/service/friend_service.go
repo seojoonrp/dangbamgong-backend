@@ -19,6 +19,7 @@ type FriendService interface {
 	SendRequest(ctx context.Context, userID string, req dto.SendFriendRequestRequest) (*dto.SendFriendRequestResponse, error)
 	AcceptRequest(ctx context.Context, userID string, requestID string) error
 	RejectRequest(ctx context.Context, userID string, requestID string) error
+	DeleteRequest(ctx context.Context, userID string, requestID string) error
 	Nudge(ctx context.Context, userID string, targetID string) error
 }
 
@@ -390,6 +391,40 @@ func (s *friendService) RejectRequest(ctx context.Context, userID string, reques
 
 	if err := s.friendRequestRepo.UpdateStatus(ctx, reqOid, model.FriendRequestRejected); err != nil {
 		return domain.NewInternal("failed to update request status: " + err.Error())
+	}
+
+	return nil
+}
+
+func (s *friendService) DeleteRequest(ctx context.Context, userID string, requestID string) error {
+	oid, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return domain.NewUnauthorized(domain.ErrUnauthorized, "invalid user id")
+	}
+
+	reqOid, err := primitive.ObjectIDFromHex(requestID)
+	if err != nil {
+		return domain.NewBadRequest(domain.ErrBadRequest, "invalid request id")
+	}
+
+	friendReq, err := s.friendRequestRepo.FindByID(ctx, reqOid)
+	if err != nil {
+		return domain.NewInternal("failed to find request: " + err.Error())
+	}
+	if friendReq == nil {
+		return domain.NewNotFound(domain.ErrRequestNotFound, "request not found")
+	}
+
+	if friendReq.SenderID != oid {
+		return domain.NewNotFound(domain.ErrRequestNotFound, "request not found")
+	}
+
+	if friendReq.Status == model.FriendRequestAccepted {
+		return domain.NewBadRequest(domain.ErrBadRequest, "cannot delete accepted request")
+	}
+
+	if err := s.friendRequestRepo.DeleteByID(ctx, reqOid); err != nil {
+		return domain.NewInternal("failed to delete request: " + err.Error())
 	}
 
 	return nil

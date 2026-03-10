@@ -42,9 +42,10 @@ type UserSearchResponse struct {
 }
 
 type UserSearchItem struct {
-	UserID   string `json:"userId"`
-	Nickname string `json:"nickname"`
-	Tag      string `json:"tag"`
+	UserID    string `json:"userId"`
+	Nickname  string `json:"nickname"`
+	Tag       string `json:"tag"`
+	IsBlocked bool   `json:"isBlocked"`
 }
 
 type BlockItem struct {

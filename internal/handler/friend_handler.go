@@ -93,6 +93,17 @@ func (h *FriendHandler) RejectRequest(c echo.Context) error {
 	return dto.SuccessEmpty(c, http.StatusOK)
 }
 
+func (h *FriendHandler) DeleteRequest(c echo.Context) error {
+	userID := c.Get(middleware.ContextKeyUserID).(string)
+	requestID := c.Param("request_id")
+
+	if err := h.service.DeleteRequest(c.Request().Context(), userID, requestID); err != nil {
+		return err
+	}
+
+	return dto.SuccessEmpty(c, http.StatusOK)
+}
+
 func (h *FriendHandler) Nudge(c echo.Context) error {
 	userID := c.Get(middleware.ContextKeyUserID).(string)
 	targetID := c.Param("user_id")

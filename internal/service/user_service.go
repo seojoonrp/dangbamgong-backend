@@ -123,12 +123,15 @@ func (s *userService) Search(ctx context.Context, userID string, tagPrefix strin
 		return nil, domain.NewInternal("failed to find blocks: " + err.Error())
 	}
 
+	// 나를 차단한 유저만 검색에서 제외 (내가 차단한 유저는 표시)
 	excludeIDs := []primitive.ObjectID{oid}
-	for _, b := range myBlocks {
-		excludeIDs = append(excludeIDs, b.BlockedID)
-	}
 	for _, b := range blockedMe {
 		excludeIDs = append(excludeIDs, b.UserID)
+	}
+
+	myBlockedSet := make(map[primitive.ObjectID]bool, len(myBlocks))
+	for _, b := range myBlocks {
+		myBlockedSet[b.BlockedID] = true
 	}
 
 	sanitized := regexp.QuoteMeta(tagPrefix)
@@ -140,9 +143,10 @@ func (s *userService) Search(ctx context.Context, userID string, tagPrefix strin
 	items := make([]dto.UserSearchItem, len(users))
 	for i, u := range users {
 		items[i] = dto.UserSearchItem{
-			UserID:   u.ID.Hex(),
-			Nickname: u.Nickname,
-			Tag:      u.Tag,
+			UserID:    u.ID.Hex(),
+			Nickname:  u.Nickname,
+			Tag:       u.Tag,
+			IsBlocked: myBlockedSet[u.ID],
 		}
 	}
 
@@ -186,6 +190,10 @@ func (s *userService) Block(ctx context.Context, userID string, targetID string)
 	targetOid, err := primitive.ObjectIDFromHex(targetID)
 	if err != nil {
 		return domain.NewNotFound(domain.ErrUserNotFound, "invalid target user id")
+	}
+
+	if oid == targetOid {
+		return domain.NewBadRequest(domain.ErrBadRequest, "cannot block yourself")
 	}
 
 	target, err := s.userRepo.FindByID(ctx, targetOid)
