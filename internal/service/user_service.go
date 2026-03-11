@@ -89,6 +89,9 @@ func (s *userService) UpdateSettings(ctx context.Context, userID string, req dto
 	if req.ReminderHours != nil {
 		settings.ReminderHours = *req.ReminderHours
 	}
+	if req.FriendRequest != nil {
+		settings.FriendRequest = *req.FriendRequest
+	}
 	if req.FriendNudge != nil {
 		settings.FriendNudge = *req.FriendNudge
 	}
@@ -103,8 +106,8 @@ func (s *userService) UpdateSettings(ctx context.Context, userID string, req dto
 	return &dto.UpdateSettingsResponse{
 		VoidReminder:  settings.VoidReminder,
 		ReminderHours: settings.ReminderHours,
-		FriendNudge:   settings.FriendNudge,
 		FriendRequest: settings.FriendRequest,
+		FriendNudge:   settings.FriendNudge,
 	}, nil
 }
 

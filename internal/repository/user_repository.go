@@ -23,6 +23,7 @@ type UserRepository interface {
 	DeleteByID(ctx context.Context, id primitive.ObjectID) error
 	SearchByTagPrefix(ctx context.Context, prefix string, excludeIDs []primitive.ObjectID, limit int) ([]model.User, error)
 	FindByIDs(ctx context.Context, ids []primitive.ObjectID) ([]model.User, error)
+	FindUsersInVoid(ctx context.Context) ([]model.User, error)
 }
 
 type userRepository struct {
@@ -169,4 +170,21 @@ func (r *userRepository) FindByIDs(ctx context.Context, ids []primitive.ObjectID
 		return nil, err
 	}
 	return users, nil
+}
+
+func (r *userRepository) FindUsersInVoid(ctx context.Context) ([]model.User, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	cursor, err := r.coll.Find(ctx, bson.M{"is_in_void": true})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var result []model.User
+	if err := cursor.All(ctx, &result); err != nil {
+		return nil, err
+	}
+	return result, nil
 }

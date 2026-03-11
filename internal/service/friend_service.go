@@ -28,6 +28,7 @@ type friendService struct {
 	blockRepo         repository.BlockRepository
 	friendshipRepo    repository.FriendshipRepository
 	friendRequestRepo repository.FriendRequestRepository
+	notifSvc          NotificationService
 }
 
 func NewFriendService(
@@ -35,12 +36,14 @@ func NewFriendService(
 	br repository.BlockRepository,
 	fr repository.FriendshipRepository,
 	frr repository.FriendRequestRepository,
+	ns NotificationService,
 ) FriendService {
 	return &friendService{
 		userRepo:          ur,
 		blockRepo:         br,
 		friendshipRepo:    fr,
 		friendRequestRepo: frr,
+		notifSvc:          ns,
 	}
 }
 
@@ -306,6 +309,11 @@ func (s *friendService) SendRequest(ctx context.Context, userID string, req dto.
 		return nil, domain.NewInternal("failed to create friend request: " + err.Error())
 	}
 
+	sender, err := s.userRepo.FindByID(ctx, senderOid)
+	if err == nil && sender != nil {
+		_ = s.notifSvc.SendFriendRequest(ctx, receiverOid, sender.Nickname)
+	}
+
 	return &dto.SendFriendRequestResponse{RequestID: friendReq.ID.Hex()}, nil
 }
 
@@ -357,6 +365,11 @@ func (s *friendService) AcceptRequest(ctx context.Context, userID string, reques
 	}
 	if err := s.friendshipRepo.Create(ctx, f2); err != nil {
 		return domain.NewInternal("failed to create friendship: " + err.Error())
+	}
+
+	accepter, err := s.userRepo.FindByID(ctx, oid)
+	if err == nil && accepter != nil {
+		_ = s.notifSvc.SendFriendAccept(ctx, friendReq.SenderID, accepter.Nickname)
 	}
 
 	return nil
@@ -461,7 +474,10 @@ func (s *friendService) Nudge(ctx context.Context, userID string, targetID strin
 		return domain.NewBadRequest(domain.ErrFriendNotInVoid, "friend is not in void")
 	}
 
-	// TODO: 실제 푸시 알림 전송
+	sender, err := s.userRepo.FindByID(ctx, oid)
+	if err == nil && sender != nil {
+		_ = s.notifSvc.SendFriendNudge(ctx, targetOid, sender.Nickname)
+	}
 
 	return nil
 }

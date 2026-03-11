@@ -43,6 +43,11 @@ const (
 	ErrActivityNotFound      ErrorCode = "ACTIVITY_NOT_FOUND"
 )
 
+// Notification
+const (
+	ErrNotificationNotFound ErrorCode = "NOTIFICATION_NOT_FOUND"
+)
+
 // Friend
 const (
 	ErrAlreadyFriends     ErrorCode = "ALREADY_FRIENDS"

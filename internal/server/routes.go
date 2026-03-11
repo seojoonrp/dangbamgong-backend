@@ -90,5 +90,16 @@ func (s *Server) RegisterRoutes() http.Handler {
 	statGroup.GET("/daily", s.stat.GetDailyStat)
 	statGroup.GET("/me", s.stat.GetMyVoidStat)
 
+	// Notification - all protected
+	notifGroup := e.Group("/notifications", middleware.JWTAuth())
+	notifGroup.GET("", s.notification.GetNotifications)
+	notifGroup.PATCH("/:notification_id/read", s.notification.MarkAsRead)
+	notifGroup.GET("/unread-count", s.notification.GetUnreadCount)
+
+	// Device - all protected
+	deviceGroup := e.Group("/devices", middleware.JWTAuth())
+	deviceGroup.PUT("/token", s.device.RegisterToken)
+	deviceGroup.DELETE("/token", s.device.DeleteToken)
+
 	return e
 }

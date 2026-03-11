@@ -22,20 +22,23 @@ type VoidService interface {
 }
 
 type voidService struct {
-	userRepo        repository.UserRepository
-	voidSessionRepo repository.VoidSessionRepository
-	activityRepo    repository.ActivityRepository
+	userRepo          repository.UserRepository
+	voidSessionRepo   repository.VoidSessionRepository
+	activityRepo      repository.ActivityRepository
+	reminderScheduler *VoidReminderScheduler
 }
 
 func NewVoidService(
 	ur repository.UserRepository,
 	vr repository.VoidSessionRepository,
 	ar repository.ActivityRepository,
+	rs *VoidReminderScheduler,
 ) VoidService {
 	return &voidService{
-		userRepo:        ur,
-		voidSessionRepo: vr,
-		activityRepo:    ar,
+		userRepo:          ur,
+		voidSessionRepo:   vr,
+		activityRepo:      ar,
+		reminderScheduler: rs,
 	}
 }
 
@@ -57,6 +60,10 @@ func (s *voidService) Start(ctx context.Context, userID string) (*dto.VoidStartR
 	now := time.Now()
 	if err := s.userRepo.SetVoidState(ctx, oid, true, &now, nil); err != nil {
 		return nil, domain.NewInternal("failed to set void state: " + err.Error())
+	}
+
+	if user.NotificationSettings.VoidReminder {
+		s.reminderScheduler.Schedule(oid, now, user.NotificationSettings.ReminderHours)
 	}
 
 	return &dto.VoidStartResponse{
@@ -122,6 +129,8 @@ func (s *voidService) End(ctx context.Context, userID string, req dto.VoidEndReq
 		return nil, domain.NewInternal("failed to reset void state: " + err.Error())
 	}
 
+	s.reminderScheduler.Cancel(userID)
+
 	return &dto.VoidEndResponse{
 		SessionID:   session.ID.Hex(),
 		StartedAt:   startedAt,
@@ -150,6 +159,8 @@ func (s *voidService) Cancel(ctx context.Context, userID string) error {
 	if err := s.userRepo.SetVoidState(ctx, oid, false, nil, nil); err != nil {
 		return domain.NewInternal("failed to reset void state: " + err.Error())
 	}
+
+	s.reminderScheduler.Cancel(userID)
 
 	return nil
 }
