@@ -16,3 +16,9 @@ type VoidSession struct {
 	Activities  []string           `bson:"activities" json:"activities"`
 	CreatedAt   time.Time          `bson:"created_at" json:"createdAt"`
 }
+
+type VoidUserStats struct {
+	TotalDurationSec int64 `bson:"total_duration_sec"`
+	SessionCount     int   `bson:"session_count"`
+	MaxDurationSec   int64 `bson:"max_duration_sec"`
+}

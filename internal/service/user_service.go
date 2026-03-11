@@ -4,6 +4,7 @@ import (
 	"context"
 	"regexp"
 	"time"
+	"unicode/utf8"
 
 	"dangbamgong-backend/internal/domain"
 	"dangbamgong-backend/internal/dto"
@@ -20,6 +21,7 @@ type UserService interface {
 	GetBlocks(ctx context.Context, userID string) (*dto.BlockListResponse, error)
 	Block(ctx context.Context, userID string, targetID string) error
 	Unblock(ctx context.Context, userID string, targetID string) error
+	ChangeNickname(ctx context.Context, userID string, req dto.ChangeNicknameRequest) (*dto.ChangeNicknameResponse, error)
 }
 
 type userService struct {
@@ -259,4 +261,31 @@ func (s *userService) Unblock(ctx context.Context, userID string, targetID strin
 	}
 
 	return nil
+}
+
+func (s *userService) ChangeNickname(ctx context.Context, userID string, req dto.ChangeNicknameRequest) (*dto.ChangeNicknameResponse, error) {
+	length := utf8.RuneCountInString(req.Nickname)
+	if length < 3 || length > 15 {
+		return nil, domain.NewBadRequest(domain.ErrInvalidNickname, "nickname must be 3-15 characters")
+	}
+
+	oid, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return nil, domain.NewUnauthorized(domain.ErrUnauthorized, "invalid user id")
+	}
+
+	user, err := s.userRepo.FindByID(ctx, oid)
+	if err != nil || user == nil {
+		return nil, domain.NewUnauthorized(domain.ErrUnauthorized, "user not found")
+	}
+
+	if user.Nickname == "" {
+		return nil, domain.NewBadRequest(domain.ErrInvalidNickname, "nickname is not set yet")
+	}
+
+	if err := s.userRepo.UpdateNickname(ctx, oid, req.Nickname); err != nil {
+		return nil, domain.NewInternal("failed to update nickname: " + err.Error())
+	}
+
+	return &dto.ChangeNicknameResponse{Nickname: req.Nickname}, nil
 }

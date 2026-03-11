@@ -29,6 +29,17 @@ func (h *StatHandler) GetHomeStat(c echo.Context) error {
 	return dto.Success(c, http.StatusOK, resp)
 }
 
+func (h *StatHandler) GetMyVoidStat(c echo.Context) error {
+	userID := c.Get(middleware.ContextKeyUserID).(string)
+
+	resp, err := h.service.GetMyVoidStat(c.Request().Context(), userID)
+	if err != nil {
+		return err
+	}
+
+	return dto.Success(c, http.StatusOK, resp)
+}
+
 func (h *StatHandler) GetDailyStat(c echo.Context) error {
 	userID := c.Get(middleware.ContextKeyUserID).(string)
 	targetDay := c.QueryParam("target_day")

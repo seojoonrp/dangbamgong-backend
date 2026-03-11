@@ -31,3 +31,10 @@ type VoidSessionItem struct {
 	EndedAt    time.Time `json:"endedAt"`
 	Activities []string  `json:"activities"`
 }
+
+// GET /stats/me
+type MyVoidStatResponse struct {
+	TotalDurationSec   int64 `json:"totalDurationSec"`
+	AverageDurationSec int64 `json:"averageDurationSec"`
+	MaxDurationSec     int64 `json:"maxDurationSec"`
+}

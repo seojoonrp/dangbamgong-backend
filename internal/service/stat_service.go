@@ -19,6 +19,7 @@ const bucketInterval = 20 * time.Minute
 type StatService interface {
 	GetHomeStat(ctx context.Context, userID string) (*dto.HomeStatResponse, error)
 	GetDailyStat(ctx context.Context, userID string, targetDay string) (*dto.DailyStatResponse, error)
+	GetMyVoidStat(ctx context.Context, userID string) (*dto.MyVoidStatResponse, error)
 }
 
 type statService struct {
@@ -158,6 +159,37 @@ func (s *statService) GetDailyStat(ctx context.Context, userID string, targetDay
 		TargetDay:  targetDay,
 		Buckets:    bucketItems,
 		MySessions: sessionItems,
+	}, nil
+}
+
+func (s *statService) GetMyVoidStat(ctx context.Context, userID string) (*dto.MyVoidStatResponse, error) {
+	oid, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return nil, domain.NewUnauthorized(domain.ErrUnauthorized, "invalid user id")
+	}
+
+	stats, err := s.voidSessionRepo.AggregateUserStats(ctx, oid)
+	if err != nil {
+		return nil, domain.NewInternal("failed to aggregate void stats: " + err.Error())
+	}
+
+	if stats == nil {
+		return &dto.MyVoidStatResponse{
+			TotalDurationSec:   0,
+			AverageDurationSec: 0,
+			MaxDurationSec:     0,
+		}, nil
+	}
+
+	var avg int64
+	if stats.SessionCount > 0 {
+		avg = stats.TotalDurationSec / int64(stats.SessionCount)
+	}
+
+	return &dto.MyVoidStatResponse{
+		TotalDurationSec:   stats.TotalDurationSec,
+		AverageDurationSec: avg,
+		MaxDurationSec:     stats.MaxDurationSec,
 	}, nil
 }
 

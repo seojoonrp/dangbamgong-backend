@@ -39,6 +39,15 @@ type BlockListResponse struct {
 	Blocks []BlockItem `json:"blocks"`
 }
 
+// PATCH /users/me/nickname
+type ChangeNicknameRequest struct {
+	Nickname string `json:"nickname" validate:"required,min=3,max=15"`
+}
+
+type ChangeNicknameResponse struct {
+	Nickname string `json:"nickname"`
+}
+
 // GET /users/search
 type UserSearchResponse struct {
 	Users []UserSearchItem `json:"users"`

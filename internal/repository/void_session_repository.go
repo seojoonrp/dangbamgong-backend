@@ -16,6 +16,7 @@ type VoidSessionRepository interface {
 	FindByUserIDAndTargetDay(ctx context.Context, userID primitive.ObjectID, targetDay string) ([]model.VoidSession, error)
 	DeleteByUserID(ctx context.Context, userID primitive.ObjectID) error
 	FindByTargetDay(ctx context.Context, targetDay string) ([]model.VoidSession, error)
+	AggregateUserStats(ctx context.Context, userID primitive.ObjectID) (*model.VoidUserStats, error)
 }
 
 type voidSessionRepository struct {
@@ -78,4 +79,35 @@ func (r *voidSessionRepository) FindByTargetDay(ctx context.Context, targetDay s
 		return nil, err
 	}
 	return sessions, nil
+}
+
+func (r *voidSessionRepository) AggregateUserStats(ctx context.Context, userID primitive.ObjectID) (*model.VoidUserStats, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	pipeline := mongo.Pipeline{
+		{{Key: "$match", Value: bson.M{"user_id": userID}}},
+		{{Key: "$group", Value: bson.M{
+			"_id":                nil,
+			"total_duration_sec": bson.M{"$sum": "$duration_sec"},
+			"session_count":      bson.M{"$sum": 1},
+			"max_duration_sec":   bson.M{"$max": "$duration_sec"},
+		}}},
+	}
+
+	cursor, err := r.coll.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var results []model.VoidUserStats
+	if err := cursor.All(ctx, &results); err != nil {
+		return nil, err
+	}
+
+	if len(results) == 0 {
+		return nil, nil
+	}
+	return &results[0], nil
 }

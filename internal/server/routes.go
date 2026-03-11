@@ -60,6 +60,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	userGroup.GET("/search", s.user.Search)
 	userGroup.GET("/me", s.user.GetMe)
 	userGroup.PATCH("/me/settings", s.user.UpdateSettings)
+	userGroup.PATCH("/me/nickname", s.user.ChangeNickname)
 	userGroup.GET("/blocks", s.user.GetBlocks)
 	userGroup.POST("/:user_id/block", s.user.Block)
 	userGroup.POST("/:user_id/unblock", s.user.Unblock)
@@ -87,6 +88,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	statGroup := e.Group("/stats", middleware.JWTAuth())
 	statGroup.GET("/home", s.stat.GetHomeStat)
 	statGroup.GET("/daily", s.stat.GetDailyStat)
+	statGroup.GET("/me", s.stat.GetMyVoidStat)
 
 	return e
 }

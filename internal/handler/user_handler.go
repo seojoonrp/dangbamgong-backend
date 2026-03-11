@@ -79,6 +79,22 @@ func (h *UserHandler) Block(c echo.Context) error {
 	return dto.SuccessEmpty(c, http.StatusOK)
 }
 
+func (h *UserHandler) ChangeNickname(c echo.Context) error {
+	userID := c.Get(middleware.ContextKeyUserID).(string)
+
+	var req dto.ChangeNicknameRequest
+	if err := c.Bind(&req); err != nil {
+		return err
+	}
+
+	resp, err := h.service.ChangeNickname(c.Request().Context(), userID, req)
+	if err != nil {
+		return err
+	}
+
+	return dto.Success(c, http.StatusOK, resp)
+}
+
 func (h *UserHandler) Unblock(c echo.Context) error {
 	userID := c.Get(middleware.ContextKeyUserID).(string)
 	targetID := c.Param("user_id")
