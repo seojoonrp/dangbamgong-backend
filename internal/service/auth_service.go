@@ -14,6 +14,7 @@ import (
 	"dangbamgong-backend/internal/repository"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type AuthService interface {
@@ -67,35 +68,10 @@ func (s *authService) findOrCreateAndGenerateToken(
 	isNewUser := false
 	if user == nil {
 		isNewUser = true
-		tag, err := generateTag(10)
-		if err != nil {
-			return nil, domain.NewInternal("failed to generate tag: " + err.Error())
-		}
-
-		existingUser, err := s.userRepo.FindByTag(ctx, tag)
-		if err != nil {
-			return nil, domain.NewInternal("failed to check existing tag: " + err.Error())
-		}
-		if existingUser != nil {
-			tag, err = generateTag(10)
-			if err != nil {
-				return nil, domain.NewInternal("failed to generate tag: " + err.Error())
-			}
-
-			existingUser, err = s.userRepo.FindByTag(ctx, tag)
-			if err != nil {
-				return nil, domain.NewInternal("failed to check existing tag: " + err.Error())
-			}
-			if existingUser != nil {
-				return nil, domain.NewInternal("failed to generate unique tag")
-			}
-		}
-
 		now := time.Now()
 		user = &model.User{
 			SocialProvider: provider,
 			SocialID:       socialID,
-			Tag:            tag,
 			NotificationSettings: model.NotificationSettings{
 				VoidReminder:  true,
 				ReminderHours: 1,
@@ -106,8 +82,8 @@ func (s *authService) findOrCreateAndGenerateToken(
 			CreatedAt:         now,
 			UpdatedAt:         now,
 		}
-		if err := s.userRepo.Create(ctx, user); err != nil {
-			return nil, domain.NewInternal("failed to create user: " + err.Error())
+		if err := s.createUserWithUniqueTag(ctx, user); err != nil {
+			return nil, err
 		}
 	}
 
@@ -168,6 +144,25 @@ func (s *authService) Withdraw(ctx context.Context, userID string) error {
 	}
 
 	return nil
+}
+
+func (s *authService) createUserWithUniqueTag(ctx context.Context, user *model.User) error {
+	const maxRetries = 5
+	for i := 0; i < maxRetries; i++ {
+		tag, err := generateTag(10)
+		if err != nil {
+			return domain.NewInternal("failed to generate tag: " + err.Error())
+		}
+		user.Tag = tag
+		err = s.userRepo.Create(ctx, user)
+		if err == nil {
+			return nil
+		}
+		if !mongo.IsDuplicateKeyError(err) {
+			return domain.NewInternal("failed to create user: " + err.Error())
+		}
+	}
+	return domain.NewInternal("failed to generate unique tag after retries")
 }
 
 func generateTag(length int) (string, error) {

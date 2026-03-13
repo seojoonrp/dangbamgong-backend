@@ -95,9 +95,6 @@ func (s *userService) UpdateSettings(ctx context.Context, userID string, req dto
 	if req.FriendNudge != nil {
 		settings.FriendNudge = *req.FriendNudge
 	}
-	if req.FriendRequest != nil {
-		settings.FriendRequest = *req.FriendRequest
-	}
 
 	if err := s.userRepo.UpdateSettings(ctx, oid, settings); err != nil {
 		return nil, domain.NewInternal("failed to update settings: " + err.Error())

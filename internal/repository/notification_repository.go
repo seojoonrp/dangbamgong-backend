@@ -15,7 +15,7 @@ import (
 type NotificationRepository interface {
 	Create(ctx context.Context, notif *model.Notification) error
 	FindByUserID(ctx context.Context, userID primitive.ObjectID, limit int, offset int) ([]model.Notification, error)
-	MarkAsRead(ctx context.Context, notifID primitive.ObjectID, userID primitive.ObjectID) error
+	MarkAsRead(ctx context.Context, notifID primitive.ObjectID, userID primitive.ObjectID) (int64, error)
 	CountUnread(ctx context.Context, userID primitive.ObjectID) (int, error)
 }
 
@@ -61,15 +61,19 @@ func (r *notificationRepository) FindByUserID(ctx context.Context, userID primit
 	return notifications, nil
 }
 
-func (r *notificationRepository) MarkAsRead(ctx context.Context, notifID primitive.ObjectID, userID primitive.ObjectID) error {
+func (r *notificationRepository) MarkAsRead(ctx context.Context, notifID primitive.ObjectID, userID primitive.ObjectID) (int64, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	_, err := r.coll.UpdateOne(ctx,
+	result, err := r.coll.UpdateOne(ctx,
 		bson.M{"_id": notifID, "user_id": userID},
 		bson.M{"$set": bson.M{"is_read": true}},
 	)
-	return err
+	if err != nil {
+		return 0, err
+	}
+
+	return result.ModifiedCount, nil
 }
 
 func (r *notificationRepository) CountUnread(ctx context.Context, userID primitive.ObjectID) (int, error) {

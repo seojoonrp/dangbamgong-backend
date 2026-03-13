@@ -129,6 +129,8 @@ func (s *voidService) End(ctx context.Context, userID string, req dto.VoidEndReq
 		return nil, domain.NewInternal("failed to reset void state: " + err.Error())
 	}
 
+	// TODO : 트랜잭션 처리
+
 	s.reminderScheduler.Cancel(userID)
 
 	return &dto.VoidEndResponse{

@@ -176,7 +176,7 @@ func (s *notificationService) GetNotifications(ctx context.Context, userID strin
 }
 
 func (s *notificationService) MarkAsRead(ctx context.Context, userID string, notifID string) error {
-	_, err := primitive.ObjectIDFromHex(userID)
+	userOid, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
 		return domain.NewUnauthorized(domain.ErrUnauthorized, "invalid user id")
 	}
@@ -186,9 +186,12 @@ func (s *notificationService) MarkAsRead(ctx context.Context, userID string, not
 		return domain.NewBadRequest(domain.ErrNotificationNotFound, "invalid notification id")
 	}
 
-	userOid, _ := primitive.ObjectIDFromHex(userID)
-	if err := s.notifRepo.MarkAsRead(ctx, notifOid, userOid); err != nil {
+	modifiedCount, err := s.notifRepo.MarkAsRead(ctx, notifOid, userOid)
+	if err != nil {
 		return domain.NewInternal("failed to mark as read: " + err.Error())
+	}
+	if modifiedCount == 0 {
+		return domain.NewBadRequest(domain.ErrNotificationNotFound, "notification not found")
 	}
 	return nil
 }
