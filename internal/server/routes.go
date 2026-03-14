@@ -3,11 +3,13 @@ package server
 import (
 	"net/http"
 
+	_ "dangbamgong-backend/docs"
 	"dangbamgong-backend/internal/middleware"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	echoMiddleware "github.com/labstack/echo/v4/middleware"
+	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
 type customValidator struct {
@@ -34,6 +36,8 @@ func (s *Server) RegisterRoutes() http.Handler {
 		AllowCredentials: true,
 		MaxAge:           300,
 	}))
+
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	e.GET("/", s.health.HelloWorld)
 	e.GET("/health", s.health.Health)

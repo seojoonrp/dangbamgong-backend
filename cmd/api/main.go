@@ -37,6 +37,15 @@ func gracefulShutdown(apiServer *http.Server, done chan bool) {
 	done <- true
 }
 
+// @title           당밤공 API
+// @version         1.0
+// @description     밤의 공백 시간 측정 소셜 앱 API
+// @host            localhost:8080
+// @BasePath        /
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Bearer {JWT 토큰}
 func main() {
 
 	server := server.NewServer()

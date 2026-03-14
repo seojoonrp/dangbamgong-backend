@@ -1,0 +1,1525 @@
+basePath: /
+definitions:
+  dangbamgong-backend_internal_domain.ErrorCode:
+    enum:
+    - BAD_REQUEST
+    - NOT_FOUND
+    - INTERNAL_SERVER_ERROR
+    - UNAUTHORIZED
+    - FORBIDDEN
+    - CONFLICT
+    - SERVICE_UNAVAILABLE
+    - INVALID_TOKEN
+    - INVALID_NICKNAME
+    - NICKNAME_ALREADY_SET
+    - USER_NOT_FOUND
+    - ALREADY_BLOCKED
+    - NOT_BLOCKED
+    - ALREADY_IN_VOID
+    - NOT_IN_VOID
+    - TOO_MANY_ACTIVITIES
+    - INVALID_ACTIVITY_NAME
+    - ACTIVITY_ALREADY_EXISTS
+    - ACTIVITY_NOT_FOUND
+    - NOTIFICATION_NOT_FOUND
+    - ALREADY_FRIENDS
+    - REQUEST_ALREADY_SENT
+    - BLOCKED
+    - REQUEST_NOT_FOUND
+    - REQUEST_NOT_PENDING
+    - NOT_FRIENDS
+    - FRIEND_NOT_IN_VOID
+    - INVALID_REQUEST_TYPE
+    type: string
+    x-enum-varnames:
+    - ErrBadRequest
+    - ErrNotFound
+    - ErrInternalServer
+    - ErrUnauthorized
+    - ErrForbidden
+    - ErrConflict
+    - ErrServiceUnavailable
+    - ErrInvalidToken
+    - ErrInvalidNickname
+    - ErrNicknameAlreadySet
+    - ErrUserNotFound
+    - ErrAlreadyBlocked
+    - ErrNotBlocked
+    - ErrAlreadyInVoid
+    - ErrNotInVoid
+    - ErrTooManyActivities
+    - ErrInvalidActivityName
+    - ErrActivityAlreadyExists
+    - ErrActivityNotFound
+    - ErrNotificationNotFound
+    - ErrAlreadyFriends
+    - ErrRequestAlreadySent
+    - ErrBlocked
+    - ErrRequestNotFound
+    - ErrRequestNotPending
+    - ErrNotFriends
+    - ErrFriendNotInVoid
+    - ErrInvalidRequestType
+  dangbamgong-backend_internal_dto.ActivityItem:
+    properties:
+      id:
+        type: string
+      lastUsedAt:
+        type: string
+      name:
+        type: string
+      usageCount:
+        type: integer
+    type: object
+  dangbamgong-backend_internal_dto.ActivityListResponse:
+    properties:
+      activities:
+        items:
+          $ref: '#/definitions/dangbamgong-backend_internal_dto.ActivityItem'
+        type: array
+    type: object
+  dangbamgong-backend_internal_dto.BlockItem:
+    properties:
+      blockedAt:
+        type: string
+      nickname:
+        type: string
+      tag:
+        type: string
+      userId:
+        type: string
+    type: object
+  dangbamgong-backend_internal_dto.BlockListResponse:
+    properties:
+      blocks:
+        items:
+          $ref: '#/definitions/dangbamgong-backend_internal_dto.BlockItem'
+        type: array
+    type: object
+  dangbamgong-backend_internal_dto.BucketItem:
+    properties:
+      count:
+        type: integer
+      isMine:
+        type: boolean
+      time:
+        type: string
+    type: object
+  dangbamgong-backend_internal_dto.ChangeNicknameRequest:
+    properties:
+      nickname:
+        maxLength: 15
+        minLength: 3
+        type: string
+    required:
+    - nickname
+    type: object
+  dangbamgong-backend_internal_dto.ChangeNicknameResponse:
+    properties:
+      nickname:
+        type: string
+    type: object
+  dangbamgong-backend_internal_dto.CreateActivityRequest:
+    properties:
+      name:
+        maxLength: 10
+        minLength: 1
+        type: string
+    required:
+    - name
+    type: object
+  dangbamgong-backend_internal_dto.CreateActivityResponse:
+    properties:
+      id:
+        type: string
+      lastUsedAt:
+        type: string
+      name:
+        type: string
+      usageCount:
+        type: integer
+    type: object
+  dangbamgong-backend_internal_dto.DailyStatResponse:
+    properties:
+      buckets:
+        items:
+          $ref: '#/definitions/dangbamgong-backend_internal_dto.BucketItem'
+        type: array
+      mySessions:
+        items:
+          $ref: '#/definitions/dangbamgong-backend_internal_dto.VoidSessionItem'
+        type: array
+      targetDay:
+        type: string
+    type: object
+  dangbamgong-backend_internal_dto.ErrorResponse:
+    properties:
+      code:
+        $ref: '#/definitions/dangbamgong-backend_internal_domain.ErrorCode'
+      success:
+        type: boolean
+    type: object
+  dangbamgong-backend_internal_dto.FriendItem:
+    properties:
+      createdAt:
+        type: string
+      isInVoid:
+        type: boolean
+      lastVoidEndedAt:
+        type: string
+      nickname:
+        type: string
+      tag:
+        type: string
+      userId:
+        type: string
+    type: object
+  dangbamgong-backend_internal_dto.FriendListResponse:
+    properties:
+      friends:
+        items:
+          $ref: '#/definitions/dangbamgong-backend_internal_dto.FriendItem'
+        type: array
+    type: object
+  dangbamgong-backend_internal_dto.HomeStatResponse:
+    properties:
+      currentVoidCount:
+        description: 공통
+        type: integer
+      myRank:
+        type: integer
+      myTotalDurationSec:
+        description: 오늘 잠에 든 유저
+        type: integer
+      todaySleptCount:
+        type: integer
+      totalSleptUsers:
+        type: integer
+    type: object
+  dangbamgong-backend_internal_dto.LoginRequest:
+    properties:
+      appleRefreshToken:
+        type: string
+      idToken:
+        type: string
+      provider:
+        enum:
+        - GOOGLE
+        - KAKAO
+        - APPLE
+        type: string
+    required:
+    - idToken
+    - provider
+    type: object
+  dangbamgong-backend_internal_dto.LoginResponse:
+    properties:
+      accessToken:
+        type: string
+      isNewUser:
+        type: boolean
+    type: object
+  dangbamgong-backend_internal_dto.MyVoidStatResponse:
+    properties:
+      averageDurationSec:
+        type: integer
+      maxDurationSec:
+        type: integer
+      totalDurationSec:
+        type: integer
+    type: object
+  dangbamgong-backend_internal_dto.NotificationItem:
+    properties:
+      body:
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: string
+      isRead:
+        type: boolean
+      title:
+        type: string
+      type:
+        type: string
+    type: object
+  dangbamgong-backend_internal_dto.NotificationListResponse:
+    properties:
+      hasMore:
+        type: boolean
+      notifications:
+        items:
+          $ref: '#/definitions/dangbamgong-backend_internal_dto.NotificationItem'
+        type: array
+    type: object
+  dangbamgong-backend_internal_dto.NotificationSettings:
+    properties:
+      friendNudge:
+        type: boolean
+      friendRequest:
+        type: boolean
+      reminderHours:
+        type: integer
+      voidReminder:
+        type: boolean
+    type: object
+  dangbamgong-backend_internal_dto.ReceivedRequestItem:
+    properties:
+      createdAt:
+        type: string
+      requestId:
+        type: string
+      sender:
+        $ref: '#/definitions/dangbamgong-backend_internal_dto.UserSearchItem'
+    type: object
+  dangbamgong-backend_internal_dto.ReceivedRequestsResponse:
+    properties:
+      requests:
+        items:
+          $ref: '#/definitions/dangbamgong-backend_internal_dto.ReceivedRequestItem'
+        type: array
+    type: object
+  dangbamgong-backend_internal_dto.RegisterDeviceRequest:
+    properties:
+      token:
+        type: string
+    required:
+    - token
+    type: object
+  dangbamgong-backend_internal_dto.Response-any:
+    properties:
+      data: {}
+      success:
+        type: boolean
+    type: object
+  dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_ActivityListResponse:
+    properties:
+      data:
+        $ref: '#/definitions/dangbamgong-backend_internal_dto.ActivityListResponse'
+      success:
+        type: boolean
+    type: object
+  dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_BlockListResponse:
+    properties:
+      data:
+        $ref: '#/definitions/dangbamgong-backend_internal_dto.BlockListResponse'
+      success:
+        type: boolean
+    type: object
+  dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_ChangeNicknameResponse:
+    properties:
+      data:
+        $ref: '#/definitions/dangbamgong-backend_internal_dto.ChangeNicknameResponse'
+      success:
+        type: boolean
+    type: object
+  dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_CreateActivityResponse:
+    properties:
+      data:
+        $ref: '#/definitions/dangbamgong-backend_internal_dto.CreateActivityResponse'
+      success:
+        type: boolean
+    type: object
+  dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_DailyStatResponse:
+    properties:
+      data:
+        $ref: '#/definitions/dangbamgong-backend_internal_dto.DailyStatResponse'
+      success:
+        type: boolean
+    type: object
+  dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_FriendListResponse:
+    properties:
+      data:
+        $ref: '#/definitions/dangbamgong-backend_internal_dto.FriendListResponse'
+      success:
+        type: boolean
+    type: object
+  dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_HomeStatResponse:
+    properties:
+      data:
+        $ref: '#/definitions/dangbamgong-backend_internal_dto.HomeStatResponse'
+      success:
+        type: boolean
+    type: object
+  dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_LoginResponse:
+    properties:
+      data:
+        $ref: '#/definitions/dangbamgong-backend_internal_dto.LoginResponse'
+      success:
+        type: boolean
+    type: object
+  dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_MyVoidStatResponse:
+    properties:
+      data:
+        $ref: '#/definitions/dangbamgong-backend_internal_dto.MyVoidStatResponse'
+      success:
+        type: boolean
+    type: object
+  dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_NotificationListResponse:
+    properties:
+      data:
+        $ref: '#/definitions/dangbamgong-backend_internal_dto.NotificationListResponse'
+      success:
+        type: boolean
+    type: object
+  dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_ReceivedRequestsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/dangbamgong-backend_internal_dto.ReceivedRequestsResponse'
+      success:
+        type: boolean
+    type: object
+  dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_SendFriendRequestResponse:
+    properties:
+      data:
+        $ref: '#/definitions/dangbamgong-backend_internal_dto.SendFriendRequestResponse'
+      success:
+        type: boolean
+    type: object
+  dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_SetNicknameResponse:
+    properties:
+      data:
+        $ref: '#/definitions/dangbamgong-backend_internal_dto.SetNicknameResponse'
+      success:
+        type: boolean
+    type: object
+  dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_UnreadCountResponse:
+    properties:
+      data:
+        $ref: '#/definitions/dangbamgong-backend_internal_dto.UnreadCountResponse'
+      success:
+        type: boolean
+    type: object
+  dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_UpdateSettingsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/dangbamgong-backend_internal_dto.UpdateSettingsResponse'
+      success:
+        type: boolean
+    type: object
+  dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_UserMeResponse:
+    properties:
+      data:
+        $ref: '#/definitions/dangbamgong-backend_internal_dto.UserMeResponse'
+      success:
+        type: boolean
+    type: object
+  dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_UserSearchResponse:
+    properties:
+      data:
+        $ref: '#/definitions/dangbamgong-backend_internal_dto.UserSearchResponse'
+      success:
+        type: boolean
+    type: object
+  dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_VoidEndResponse:
+    properties:
+      data:
+        $ref: '#/definitions/dangbamgong-backend_internal_dto.VoidEndResponse'
+      success:
+        type: boolean
+    type: object
+  dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_VoidHistoryResponse:
+    properties:
+      data:
+        $ref: '#/definitions/dangbamgong-backend_internal_dto.VoidHistoryResponse'
+      success:
+        type: boolean
+    type: object
+  dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_VoidStartResponse:
+    properties:
+      data:
+        $ref: '#/definitions/dangbamgong-backend_internal_dto.VoidStartResponse'
+      success:
+        type: boolean
+    type: object
+  dangbamgong-backend_internal_dto.SendFriendRequestRequest:
+    properties:
+      receiverId:
+        type: string
+    required:
+    - receiverId
+    type: object
+  dangbamgong-backend_internal_dto.SendFriendRequestResponse:
+    properties:
+      requestId:
+        type: string
+    type: object
+  dangbamgong-backend_internal_dto.SetNicknameRequest:
+    properties:
+      nickname:
+        maxLength: 15
+        minLength: 3
+        type: string
+    required:
+    - nickname
+    type: object
+  dangbamgong-backend_internal_dto.SetNicknameResponse:
+    properties:
+      nickname:
+        type: string
+    type: object
+  dangbamgong-backend_internal_dto.TestLoginRequest:
+    properties:
+      socialId:
+        type: string
+    required:
+    - socialId
+    type: object
+  dangbamgong-backend_internal_dto.TestVoidRequest:
+    properties:
+      activities:
+        items:
+          type: string
+        type: array
+      endedAt:
+        type: string
+      startedAt:
+        type: string
+    type: object
+  dangbamgong-backend_internal_dto.UnreadCountResponse:
+    properties:
+      count:
+        type: integer
+    type: object
+  dangbamgong-backend_internal_dto.UpdateActivityRequest:
+    properties:
+      name:
+        maxLength: 10
+        minLength: 1
+        type: string
+    required:
+    - name
+    type: object
+  dangbamgong-backend_internal_dto.UpdateSettingsRequest:
+    properties:
+      friendNudge:
+        type: boolean
+      friendRequest:
+        type: boolean
+      reminderHours:
+        type: integer
+      voidReminder:
+        type: boolean
+    type: object
+  dangbamgong-backend_internal_dto.UpdateSettingsResponse:
+    properties:
+      friendNudge:
+        type: boolean
+      friendRequest:
+        type: boolean
+      reminderHours:
+        type: integer
+      voidReminder:
+        type: boolean
+    type: object
+  dangbamgong-backend_internal_dto.UserMeResponse:
+    properties:
+      currentVoidStartedAt:
+        type: string
+      id:
+        type: string
+      isInVoid:
+        type: boolean
+      nickname:
+        type: string
+      notificationSettings:
+        $ref: '#/definitions/dangbamgong-backend_internal_dto.NotificationSettings'
+      tag:
+        type: string
+    type: object
+  dangbamgong-backend_internal_dto.UserSearchItem:
+    properties:
+      isBlocked:
+        type: boolean
+      nickname:
+        type: string
+      tag:
+        type: string
+      userId:
+        type: string
+    type: object
+  dangbamgong-backend_internal_dto.UserSearchResponse:
+    properties:
+      users:
+        items:
+          $ref: '#/definitions/dangbamgong-backend_internal_dto.UserSearchItem'
+        type: array
+    type: object
+  dangbamgong-backend_internal_dto.VoidEndRequest:
+    properties:
+      activities:
+        items:
+          type: string
+        maxItems: 5
+        type: array
+    type: object
+  dangbamgong-backend_internal_dto.VoidEndResponse:
+    properties:
+      activities:
+        items:
+          type: string
+        type: array
+      durationSec:
+        type: integer
+      endedAt:
+        type: string
+      sessionId:
+        type: string
+      startedAt:
+        type: string
+      targetDay:
+        type: string
+    type: object
+  dangbamgong-backend_internal_dto.VoidHistoryResponse:
+    properties:
+      sessions:
+        items:
+          $ref: '#/definitions/dangbamgong-backend_internal_dto.VoidSession'
+        type: array
+      targetDay:
+        type: string
+      totalDurationSec:
+        type: integer
+    type: object
+  dangbamgong-backend_internal_dto.VoidSession:
+    properties:
+      activities:
+        items:
+          type: string
+        type: array
+      durationSec:
+        type: integer
+      endedAt:
+        type: string
+      sessionId:
+        type: string
+      startedAt:
+        type: string
+    type: object
+  dangbamgong-backend_internal_dto.VoidSessionItem:
+    properties:
+      activities:
+        items:
+          type: string
+        type: array
+      endedAt:
+        type: string
+      startedAt:
+        type: string
+    type: object
+  dangbamgong-backend_internal_dto.VoidStartResponse:
+    properties:
+      sessionId:
+        type: string
+      startedAt:
+        type: string
+      targetDay:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: 밤의 공백 시간 측정 소셜 앱 API
+  title: 당밤공 API
+  version: "1.0"
+paths:
+  /:
+    get:
+      description: 서버 동작 확인용 엔드포인트
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Hello World
+      tags:
+      - Health
+  /activities:
+    get:
+      description: 유저의 활동 목록을 사용 빈도순으로 반환합니다
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_ActivityListResponse'
+      security:
+      - BearerAuth: []
+      summary: 활동 목록 조회
+      tags:
+      - Activities
+    post:
+      consumes:
+      - application/json
+      description: 새로운 활동을 생성합니다. 이름은 1-10자, 중복 불가.
+      parameters:
+      - description: 활동 이름
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dangbamgong-backend_internal_dto.CreateActivityRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_CreateActivityResponse'
+        "400":
+          description: INVALID_ACTIVITY_NAME
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.ErrorResponse'
+        "409":
+          description: ACTIVITY_ALREADY_EXISTS
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 활동 생성
+      tags:
+      - Activities
+  /activities/{activity_id}:
+    delete:
+      description: 활동을 삭제합니다
+      parameters:
+      - description: 활동 ID
+        in: path
+        name: activity_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.Response-any'
+        "404":
+          description: ACTIVITY_NOT_FOUND
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 활동 삭제
+      tags:
+      - Activities
+    patch:
+      consumes:
+      - application/json
+      description: 기존 활동의 이름을 수정합니다
+      parameters:
+      - description: 활동 ID
+        in: path
+        name: activity_id
+        required: true
+        type: string
+      - description: 새 이름
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dangbamgong-backend_internal_dto.UpdateActivityRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.Response-any'
+        "400":
+          description: INVALID_ACTIVITY_NAME
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.ErrorResponse'
+        "404":
+          description: ACTIVITY_NOT_FOUND
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.ErrorResponse'
+        "409":
+          description: ACTIVITY_ALREADY_EXISTS
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 활동 이름 수정
+      tags:
+      - Activities
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Google/Kakao/Apple 소셜 로그인을 처리합니다. 신규 유저인 경우 자동 가입됩니다.
+      parameters:
+      - description: 소셜 로그인 정보
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dangbamgong-backend_internal_dto.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.ErrorResponse'
+      summary: 소셜 로그인
+      tags:
+      - Auth
+  /auth/login/test:
+    post:
+      consumes:
+      - application/json
+      description: 개발용 테스트 로그인. socialId로 직접 로그인합니다.
+      parameters:
+      - description: 테스트 로그인 정보
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dangbamgong-backend_internal_dto.TestLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_LoginResponse'
+      summary: 테스트 로그인
+      tags:
+      - Auth
+  /auth/nickname:
+    post:
+      consumes:
+      - application/json
+      description: 신규 가입 후 최초 닉네임을 설정합니다. 이미 설정된 경우 실패합니다.
+      parameters:
+      - description: 닉네임 (3-15자)
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dangbamgong-backend_internal_dto.SetNicknameRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_SetNicknameResponse'
+        "400":
+          description: INVALID_NICKNAME
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.ErrorResponse'
+        "409":
+          description: NICKNAME_ALREADY_SET
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 닉네임 설정
+      tags:
+      - Auth
+  /auth/withdraw:
+    delete:
+      description: 계정을 삭제합니다. (미완성)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.Response-any'
+      security:
+      - BearerAuth: []
+      summary: 회원 탈퇴
+      tags:
+      - Auth
+  /devices/token:
+    delete:
+      consumes:
+      - application/json
+      description: 등록된 디바이스 토큰을 삭제합니다
+      parameters:
+      - description: 삭제할 토큰
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dangbamgong-backend_internal_dto.RegisterDeviceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.Response-any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 디바이스 토큰 삭제
+      tags:
+      - Devices
+    put:
+      consumes:
+      - application/json
+      description: APNs 푸시 알림용 디바이스 토큰을 등록(또는 갱신)합니다
+      parameters:
+      - description: 디바이스 토큰
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dangbamgong-backend_internal_dto.RegisterDeviceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.Response-any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 디바이스 토큰 등록
+      tags:
+      - Devices
+  /friends:
+    get:
+      description: 친구 목록을 반환합니다. 각 친구의 공백 상태를 포함합니다.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_FriendListResponse'
+      security:
+      - BearerAuth: []
+      summary: 친구 목록 조회
+      tags:
+      - Friends
+  /friends/{user_id}:
+    delete:
+      description: 양방향 친구 관계를 삭제합니다
+      parameters:
+      - description: 삭제할 친구 유저 ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.Response-any'
+        "404":
+          description: NOT_FRIENDS
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 친구 삭제
+      tags:
+      - Friends
+  /friends/{user_id}/nudge:
+    post:
+      description: 공백 중인 친구에게 알림을 보냅니다. 친구가 공백 중이 아니면 실패합니다.
+      parameters:
+      - description: 찌를 친구 유저 ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.Response-any'
+        "400":
+          description: NOT_FRIENDS / FRIEND_NOT_IN_VOID
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 친구 찌르기
+      tags:
+      - Friends
+  /friends/requests:
+    get:
+      description: 받은(received) 또는 보낸(sent) 친구 요청 목록을 반환합니다
+      parameters:
+      - description: 요청 타입
+        enum:
+        - received
+        - sent
+        in: query
+        name: type
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: type=received
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_ReceivedRequestsResponse'
+        "400":
+          description: INVALID_REQUEST_TYPE
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 친구 요청 목록 조회
+      tags:
+      - Friends
+    post:
+      consumes:
+      - application/json
+      description: 유저에게 친구 요청을 보냅니다. 이미 친구이거나 차단 관계이면 실패합니다.
+      parameters:
+      - description: 받는 유저 ID
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dangbamgong-backend_internal_dto.SendFriendRequestRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_SendFriendRequestResponse'
+        "400":
+          description: BLOCKED
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.ErrorResponse'
+        "409":
+          description: ALREADY_FRIENDS / REQUEST_ALREADY_SENT
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 친구 요청 보내기
+      tags:
+      - Friends
+  /friends/requests/{request_id}:
+    delete:
+      description: 보낸 친구 요청을 삭제합니다. 이미 수락된 요청은 삭제할 수 없습니다.
+      parameters:
+      - description: 요청 ID
+        in: path
+        name: request_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.Response-any'
+        "404":
+          description: REQUEST_NOT_FOUND
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 친구 요청 삭제
+      tags:
+      - Friends
+  /friends/requests/{request_id}/accept:
+    post:
+      description: 받은 친구 요청을 수락합니다. 양방향 친구 관계가 생성됩니다.
+      parameters:
+      - description: 요청 ID
+        in: path
+        name: request_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.Response-any'
+        "400":
+          description: REQUEST_NOT_PENDING
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.ErrorResponse'
+        "404":
+          description: REQUEST_NOT_FOUND
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 친구 요청 수락
+      tags:
+      - Friends
+  /friends/requests/{request_id}/reject:
+    post:
+      description: 받은 친구 요청을 거절합니다. 요청은 삭제되지 않고 상태만 변경됩니다.
+      parameters:
+      - description: 요청 ID
+        in: path
+        name: request_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.Response-any'
+        "400":
+          description: REQUEST_NOT_PENDING
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.ErrorResponse'
+        "404":
+          description: REQUEST_NOT_FOUND
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 친구 요청 거절
+      tags:
+      - Friends
+  /health:
+    get:
+      description: DB 연결 상태를 확인합니다
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.ErrorResponse'
+      summary: 헬스 체크
+      tags:
+      - Health
+  /notifications:
+    get:
+      description: 유저의 알림 목록을 페이지네이션으로 반환합니다
+      parameters:
+      - description: 조회 개수 (기본 20)
+        in: query
+        name: limit
+        type: integer
+      - description: 오프셋
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_NotificationListResponse'
+      security:
+      - BearerAuth: []
+      summary: 알림 목록 조회
+      tags:
+      - Notifications
+  /notifications/{notification_id}/read:
+    patch:
+      description: 특정 알림을 읽음 상태로 변경합니다
+      parameters:
+      - description: 알림 ID
+        in: path
+        name: notification_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.Response-any'
+        "404":
+          description: NOTIFICATION_NOT_FOUND
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 알림 읽음 처리
+      tags:
+      - Notifications
+  /notifications/unread-count:
+    get:
+      description: 읽지 않은 알림의 개수를 반환합니다
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_UnreadCountResponse'
+      security:
+      - BearerAuth: []
+      summary: 읽지 않은 알림 수 조회
+      tags:
+      - Notifications
+  /stats/daily:
+    get:
+      description: 특정 날짜의 20분 단위 버킷 통계와 내 공백 세션 목록을 반환합니다
+      parameters:
+      - description: 조회할 날짜 (YYYY-MM-DD)
+        in: query
+        name: target_day
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_DailyStatResponse'
+      security:
+      - BearerAuth: []
+      summary: 일별 통계 조회
+      tags:
+      - Stats
+  /stats/home:
+    get:
+      description: 현재 공백 중인 유저 수, 오늘 잠에 든 유저 수, 내 랭킹/총 공백 시간을 반환합니다
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_HomeStatResponse'
+      security:
+      - BearerAuth: []
+      summary: 홈 통계 조회
+      tags:
+      - Stats
+  /stats/me:
+    get:
+      description: 전체 공백 총 시간, 평균 시간, 최대 시간을 반환합니다
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_MyVoidStatResponse'
+      security:
+      - BearerAuth: []
+      summary: 내 공백 통계 조회
+      tags:
+      - Stats
+  /users/{user_id}/block:
+    post:
+      description: 유저를 차단합니다. 기존 친구 관계 및 친구 요청이 모두 삭제됩니다.
+      parameters:
+      - description: 차단할 유저 ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.Response-any'
+        "404":
+          description: USER_NOT_FOUND
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.ErrorResponse'
+        "409":
+          description: ALREADY_BLOCKED
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 유저 차단
+      tags:
+      - Users
+  /users/{user_id}/unblock:
+    post:
+      description: 차단을 해제합니다
+      parameters:
+      - description: 차단 해제할 유저 ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.Response-any'
+        "400":
+          description: NOT_BLOCKED
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 유저 차단 해제
+      tags:
+      - Users
+  /users/blocks:
+    get:
+      description: 내가 차단한 유저 목록을 반환합니다
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_BlockListResponse'
+      security:
+      - BearerAuth: []
+      summary: 차단 목록 조회
+      tags:
+      - Users
+  /users/me:
+    get:
+      description: 현재 로그인한 유저의 프로필과 알림 설정을 반환합니다
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_UserMeResponse'
+      security:
+      - BearerAuth: []
+      summary: 내 정보 조회
+      tags:
+      - Users
+  /users/me/nickname:
+    patch:
+      consumes:
+      - application/json
+      description: 기존 닉네임을 변경합니다. 최초 설정은 /auth/nickname을 사용하세요.
+      parameters:
+      - description: 새 닉네임 (3-15자)
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dangbamgong-backend_internal_dto.ChangeNicknameRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_ChangeNicknameResponse'
+        "400":
+          description: INVALID_NICKNAME
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 닉네임 변경
+      tags:
+      - Users
+  /users/me/settings:
+    patch:
+      consumes:
+      - application/json
+      description: 알림 설정을 부분 업데이트합니다. 전달된 필드만 변경됩니다.
+      parameters:
+      - description: 변경할 설정
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dangbamgong-backend_internal_dto.UpdateSettingsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_UpdateSettingsResponse'
+      security:
+      - BearerAuth: []
+      summary: 알림 설정 변경
+      tags:
+      - Users
+  /users/search:
+    get:
+      description: 태그 접두사로 유저를 검색합니다. 나를 차단한 유저는 제외됩니다.
+      parameters:
+      - description: 태그 접두사
+        in: query
+        name: tag
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_UserSearchResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 유저 검색
+      tags:
+      - Users
+  /void/cancel:
+    post:
+      description: 진행 중인 공백을 취소합니다. 세션 기록이 남지 않습니다.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.Response-any'
+        "400":
+          description: NOT_IN_VOID
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 공백 취소
+      tags:
+      - Void
+  /void/end:
+    post:
+      consumes:
+      - application/json
+      description: 진행 중인 공백 세션을 종료하고 활동을 기록합니다. 활동은 최대 5개.
+      parameters:
+      - description: 종료 시 기록할 활동 목록
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dangbamgong-backend_internal_dto.VoidEndRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_VoidEndResponse'
+        "400":
+          description: NOT_IN_VOID / TOO_MANY_ACTIVITIES / ACTIVITY_NOT_FOUND
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 공백 종료
+      tags:
+      - Void
+  /void/history:
+    get:
+      description: 특정 날짜의 공백 세션 목록과 총 시간을 반환합니다. 날짜 기준은 KST 16:00.
+      parameters:
+      - description: 조회할 날짜 (YYYY-MM-DD)
+        in: query
+        name: target_day
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_VoidHistoryResponse'
+      security:
+      - BearerAuth: []
+      summary: 공백 히스토리 조회
+      tags:
+      - Void
+  /void/start:
+    post:
+      description: 공백(밤의 공백) 세션을 시작합니다. 이미 공백 중이면 실패합니다.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_VoidStartResponse'
+        "409":
+          description: ALREADY_IN_VOID
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 공백 시작
+      tags:
+      - Void
+  /void/test:
+    post:
+      consumes:
+      - application/json
+      description: 개발용. 임의의 시작/종료 시각으로 공백 세션을 생성합니다.
+      parameters:
+      - description: 테스트 공백 데이터
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dangbamgong-backend_internal_dto.TestVoidRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_VoidEndResponse'
+      security:
+      - BearerAuth: []
+      summary: 테스트 공백 생성
+      tags:
+      - Void
+securityDefinitions:
+  BearerAuth:
+    description: Bearer {JWT 토큰}
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
