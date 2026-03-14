@@ -2,6 +2,7 @@ package server
 
 import (
 	"net/http"
+	"os"
 
 	_ "dangbamgong-backend/docs"
 	"dangbamgong-backend/internal/middleware"
@@ -45,7 +46,9 @@ func (s *Server) RegisterRoutes() http.Handler {
 	// Auth - public
 	authGroup := e.Group("/auth")
 	authGroup.POST("/login", s.auth.Login)
-	authGroup.POST("/login/test", s.auth.TestLogin)
+	if os.Getenv("APP_ENV") != "production" {
+		authGroup.POST("/login/test", s.auth.TestLogin)
+	}
 
 	// Auth - protected
 	authProtected := authGroup.Group("", middleware.JWTAuth())
@@ -75,7 +78,9 @@ func (s *Server) RegisterRoutes() http.Handler {
 	voidGroup.POST("/end", s.void.End)
 	voidGroup.POST("/cancel", s.void.Cancel)
 	voidGroup.GET("/history", s.void.History)
-	voidGroup.POST("/test", s.void.TestCreate)
+	if os.Getenv("APP_ENV") != "production" {
+		voidGroup.POST("/test", s.void.TestCreate)
+	}
 
 	// Friend - all protected
 	friendGroup := e.Group("/friends", middleware.JWTAuth())

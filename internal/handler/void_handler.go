@@ -56,6 +56,9 @@ func (h *VoidHandler) End(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return err
 	}
+	if err := c.Validate(&req); err != nil {
+		return err
+	}
 
 	resp, err := h.service.End(c.Request().Context(), userID, req)
 	if err != nil {

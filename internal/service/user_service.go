@@ -87,6 +87,9 @@ func (s *userService) UpdateSettings(ctx context.Context, userID string, req dto
 		settings.VoidReminder = *req.VoidReminder
 	}
 	if req.ReminderHours != nil {
+		if *req.ReminderHours < 0 || *req.ReminderHours > 24 {
+			return nil, domain.NewBadRequest(domain.ErrBadRequest, "reminder hours must be between 0 and 24")
+		}
 		settings.ReminderHours = *req.ReminderHours
 	}
 	if req.FriendRequest != nil {

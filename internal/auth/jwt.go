@@ -1,11 +1,18 @@
 package auth
 
 import (
+	"log"
 	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
+
+func init() {
+	if os.Getenv("JWT_SECRET") == "" {
+		log.Fatal("JWT_SECRET environment variable is required")
+	}
+}
 
 type Claims struct {
 	UserID string `json:"userId"`

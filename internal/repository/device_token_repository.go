@@ -15,7 +15,7 @@ import (
 type DeviceTokenRepository interface {
 	Upsert(ctx context.Context, userID primitive.ObjectID, token string) error
 	FindByUserID(ctx context.Context, userID primitive.ObjectID) ([]model.DeviceToken, error)
-	DeleteByToken(ctx context.Context, token string) error
+	DeleteByUserAndToken(ctx context.Context, userID primitive.ObjectID, token string) error
 	DeleteByUserID(ctx context.Context, userID primitive.ObjectID) error
 }
 
@@ -66,11 +66,11 @@ func (r *deviceTokenRepository) FindByUserID(ctx context.Context, userID primiti
 	return tokens, nil
 }
 
-func (r *deviceTokenRepository) DeleteByToken(ctx context.Context, token string) error {
+func (r *deviceTokenRepository) DeleteByUserAndToken(ctx context.Context, userID primitive.ObjectID, token string) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	_, err := r.coll.DeleteOne(ctx, bson.M{"token": token})
+	_, err := r.coll.DeleteOne(ctx, bson.M{"user_id": userID, "token": token})
 	return err
 }
 

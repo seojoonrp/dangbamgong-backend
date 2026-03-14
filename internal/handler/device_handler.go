@@ -67,6 +67,8 @@ func (h *DeviceHandler) RegisterToken(c echo.Context) error {
 // @Failure      400   {object}  dto.ErrorResponse
 // @Router       /devices/token [delete]
 func (h *DeviceHandler) DeleteToken(c echo.Context) error {
+	userID := c.Get(middleware.ContextKeyUserID).(string)
+
 	var req dto.RegisterDeviceRequest
 	if err := c.Bind(&req); err != nil {
 		return err
@@ -76,7 +78,12 @@ func (h *DeviceHandler) DeleteToken(c echo.Context) error {
 		return domain.NewBadRequest(domain.ErrBadRequest, "token is required")
 	}
 
-	if err := h.deviceTokenRepo.DeleteByToken(c.Request().Context(), req.Token); err != nil {
+	oid, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return domain.NewUnauthorized(domain.ErrUnauthorized, "invalid user id")
+	}
+
+	if err := h.deviceTokenRepo.DeleteByUserAndToken(c.Request().Context(), oid, req.Token); err != nil {
 		return domain.NewInternal("failed to delete device token: " + err.Error())
 	}
 

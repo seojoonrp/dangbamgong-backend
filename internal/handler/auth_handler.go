@@ -34,6 +34,9 @@ func (h *AuthHandler) Login(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return err
 	}
+	if err := c.Validate(&req); err != nil {
+		return err
+	}
 
 	resp, err := h.service.Login(c.Request().Context(), req)
 	if err != nil {
@@ -55,6 +58,9 @@ func (h *AuthHandler) Login(c echo.Context) error {
 func (h *AuthHandler) TestLogin(c echo.Context) error {
 	var req dto.TestLoginRequest
 	if err := c.Bind(&req); err != nil {
+		return err
+	}
+	if err := c.Validate(&req); err != nil {
 		return err
 	}
 
