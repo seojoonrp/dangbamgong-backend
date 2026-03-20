@@ -7,6 +7,7 @@ type UserMeResponse struct {
 	ID                   string               `json:"id"`
 	Tag                  string               `json:"tag"`
 	Nickname             string               `json:"nickname"`
+	SocialProvider       string               `json:"socialProvider"`
 	IsInVoid             bool                 `json:"isInVoid"`
 	CurrentVoidStartedAt *time.Time           `json:"currentVoidStartedAt"`
 	NotificationSettings NotificationSettings `json:"notificationSettings"`

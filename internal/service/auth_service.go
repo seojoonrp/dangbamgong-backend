@@ -26,12 +26,14 @@ type AuthService interface {
 
 type authService struct {
 	userRepo       repository.UserRepository
+	activityRepo   repository.ActivityRepository
 	socialVerifier auth.SocialVerifier
 }
 
-func NewAuthService(ur repository.UserRepository, socialVerifier auth.SocialVerifier) AuthService {
+func NewAuthService(ur repository.UserRepository, ar repository.ActivityRepository, socialVerifier auth.SocialVerifier) AuthService {
 	return &authService{
 		userRepo:       ur,
+		activityRepo:   ar,
 		socialVerifier: socialVerifier,
 	}
 }
@@ -85,6 +87,7 @@ func (s *authService) findOrCreateAndGenerateToken(
 		if err := s.createUserWithUniqueTag(ctx, user); err != nil {
 			return nil, err
 		}
+		s.createDefaultActivities(ctx, user.ID)
 	}
 
 	token, err := auth.GenerateToken(user.ID.Hex())
@@ -163,6 +166,19 @@ func (s *authService) createUserWithUniqueTag(ctx context.Context, user *model.U
 		}
 	}
 	return domain.NewInternal("failed to generate unique tag after retries")
+}
+
+func (s *authService) createDefaultActivities(ctx context.Context, userID primitive.ObjectID) {
+	now := time.Now()
+	defaults := []string{"유튜브", "릴스"}
+	for _, name := range defaults {
+		activity := &model.Activity{
+			UserID:    userID,
+			Name:      name,
+			CreatedAt: now,
+		}
+		s.activityRepo.Create(ctx, activity)
+	}
 }
 
 func generateTag(length int) (string, error) {

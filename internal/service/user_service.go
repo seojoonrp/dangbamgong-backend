@@ -60,6 +60,7 @@ func (s *userService) GetMe(ctx context.Context, userID string) (*dto.UserMeResp
 		ID:                   user.ID.Hex(),
 		Tag:                  user.Tag,
 		Nickname:             user.Nickname,
+		SocialProvider:       string(user.SocialProvider),
 		IsInVoid:             user.IsInVoid,
 		CurrentVoidStartedAt: user.CurrentVoidStartedAt,
 		NotificationSettings: dto.NotificationSettings{
