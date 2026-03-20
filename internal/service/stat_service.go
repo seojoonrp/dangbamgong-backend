@@ -136,6 +136,48 @@ func (s *statService) GetDailyStat(ctx context.Context, userID string, targetDay
 		return nil, domain.NewInternal("failed to find user sessions: " + err.Error())
 	}
 
+	// 본인의 총 공백 시간 계산
+	var myTotalDurationSec int64
+	for _, sess := range mySessions {
+		myTotalDurationSec += sess.DurationSec
+	}
+
+	// 전체 유저 수 & 전체 공백 시간 (과거 날짜는 캐시 사용)
+	var totalSleptUsers int
+	var allTotalDurationSec int64
+
+	today := config.CalcTargetDay(now)
+	if targetDay != today {
+		// 과거 날짜: 캐시 조회
+		summary, err := s.statRepo.GetDailySummaryCache(ctx, targetDay)
+		if err != nil {
+			return nil, domain.NewInternal("failed to get daily summary cache: " + err.Error())
+		}
+		if summary != nil {
+			totalSleptUsers = summary.Count
+			allTotalDurationSec = summary.TotalDurationSec
+		} else {
+			// 캐시 미스: 계산 후 캐싱
+			totalSleptUsers, allTotalDurationSec, err = s.computeDailySummary(ctx, targetDay)
+			if err != nil {
+				return nil, err
+			}
+			_ = s.statRepo.UpsertDailySummaryCache(ctx, model.VoidStatCache{
+				TargetDay:        targetDay,
+				Bucket:           "__summary__",
+				Count:            totalSleptUsers,
+				TotalDurationSec: allTotalDurationSec,
+				UpdatedAt:        now,
+			})
+		}
+	} else {
+		// 오늘: 항상 계산
+		totalSleptUsers, allTotalDurationSec, err = s.computeDailySummary(ctx, targetDay)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	bucketItems := make([]dto.BucketItem, len(expectedBuckets))
 	for i, b := range expectedBuckets {
 		bucketItems[i] = dto.BucketItem{
@@ -156,9 +198,12 @@ func (s *statService) GetDailyStat(ctx context.Context, userID string, targetDay
 	}
 
 	return &dto.DailyStatResponse{
-		TargetDay:  targetDay,
-		Buckets:    bucketItems,
-		MySessions: sessionItems,
+		TargetDay:           targetDay,
+		Buckets:             bucketItems,
+		MySessions:          sessionItems,
+		MyTotalDurationSec:  myTotalDurationSec,
+		TotalSleptUsers:     totalSleptUsers,
+		AllTotalDurationSec: allTotalDurationSec,
 	}, nil
 }
 
@@ -178,6 +223,7 @@ func (s *statService) GetMyVoidStat(ctx context.Context, userID string) (*dto.My
 			TotalDurationSec:   0,
 			AverageDurationSec: 0,
 			MaxDurationSec:     0,
+			MaxDurationDate:    "",
 		}, nil
 	}
 
@@ -190,7 +236,23 @@ func (s *statService) GetMyVoidStat(ctx context.Context, userID string) (*dto.My
 		TotalDurationSec:   stats.TotalDurationSec,
 		AverageDurationSec: avg,
 		MaxDurationSec:     stats.MaxDurationSec,
+		MaxDurationDate:    stats.MaxDurationDate,
 	}, nil
+}
+
+// computeDailySummary 는 해당 날짜의 전체 유저 수와 전체 공백 시간을 계산한다.
+func (s *statService) computeDailySummary(ctx context.Context, targetDay string) (int, int64, error) {
+	totalSleptUsers, err := s.statRepo.CountDistinctUsersForDay(ctx, targetDay)
+	if err != nil {
+		return 0, 0, domain.NewInternal("failed to count slept users: " + err.Error())
+	}
+
+	allTotalDurationSec, err := s.statRepo.SumTotalDurationForDay(ctx, targetDay)
+	if err != nil {
+		return 0, 0, domain.NewInternal("failed to sum total duration: " + err.Error())
+	}
+
+	return totalSleptUsers, allTotalDurationSec, nil
 }
 
 // generateBuckets 는 targetDay의 16:00부터 현재 시간 직전 완료된 20분 버킷까지의 버킷 키를 생성한다.

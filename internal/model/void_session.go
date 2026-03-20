@@ -18,7 +18,8 @@ type VoidSession struct {
 }
 
 type VoidUserStats struct {
-	TotalDurationSec int64 `bson:"total_duration_sec"`
-	SessionCount     int   `bson:"session_count"`
-	MaxDurationSec   int64 `bson:"max_duration_sec"`
+	TotalDurationSec int64  `bson:"total_duration_sec"`
+	SessionCount     int    `bson:"session_count"`
+	MaxDurationSec   int64  `bson:"max_duration_sec"`
+	MaxDurationDate  string `bson:"max_duration_date"`
 }

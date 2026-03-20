@@ -141,6 +141,8 @@ definitions:
     type: object
   dangbamgong-backend_internal_dto.DailyStatResponse:
     properties:
+      allTotalDurationSec:
+        type: integer
       buckets:
         items:
           $ref: '#/definitions/dangbamgong-backend_internal_dto.BucketItem'
@@ -149,8 +151,12 @@ definitions:
         items:
           $ref: '#/definitions/dangbamgong-backend_internal_dto.VoidSessionItem'
         type: array
+      myTotalDurationSec:
+        type: integer
       targetDay:
         type: string
+      totalSleptUsers:
+        type: integer
     type: object
   dangbamgong-backend_internal_dto.ErrorResponse:
     properties:

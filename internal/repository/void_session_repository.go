@@ -87,11 +87,13 @@ func (r *voidSessionRepository) AggregateUserStats(ctx context.Context, userID p
 
 	pipeline := mongo.Pipeline{
 		{{Key: "$match", Value: bson.M{"user_id": userID}}},
+		{{Key: "$sort", Value: bson.M{"duration_sec": -1}}},
 		{{Key: "$group", Value: bson.M{
 			"_id":                nil,
 			"total_duration_sec": bson.M{"$sum": "$duration_sec"},
 			"session_count":      bson.M{"$sum": 1},
 			"max_duration_sec":   bson.M{"$max": "$duration_sec"},
+			"max_duration_date":  bson.M{"$first": "$target_day"},
 		}}},
 	}
 

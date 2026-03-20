@@ -15,9 +15,12 @@ type HomeStatResponse struct {
 
 // GET /stats/daily
 type DailyStatResponse struct {
-	TargetDay  string            `json:"targetDay"`
-	Buckets    []BucketItem      `json:"buckets"`
-	MySessions []VoidSessionItem `json:"mySessions"`
+	TargetDay           string            `json:"targetDay"`
+	Buckets             []BucketItem      `json:"buckets"`
+	MySessions          []VoidSessionItem `json:"mySessions"`
+	MyTotalDurationSec  int64             `json:"myTotalDurationSec"`
+	TotalSleptUsers     int               `json:"totalSleptUsers"`
+	AllTotalDurationSec int64             `json:"allTotalDurationSec"`
 }
 
 type BucketItem struct {
@@ -34,7 +37,8 @@ type VoidSessionItem struct {
 
 // GET /stats/me
 type MyVoidStatResponse struct {
-	TotalDurationSec   int64 `json:"totalDurationSec"`
-	AverageDurationSec int64 `json:"averageDurationSec"`
-	MaxDurationSec     int64 `json:"maxDurationSec"`
+	TotalDurationSec   int64  `json:"totalDurationSec"`
+	AverageDurationSec int64  `json:"averageDurationSec"`
+	MaxDurationSec     int64  `json:"maxDurationSec"`
+	MaxDurationDate    string `json:"maxDurationDate"`
 }

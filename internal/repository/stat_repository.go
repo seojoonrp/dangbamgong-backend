@@ -23,6 +23,9 @@ type StatRepository interface {
 	GetBucketCache(ctx context.Context, targetDay string) ([]model.VoidStatCache, error)
 	UpsertBucketCache(ctx context.Context, caches []model.VoidStatCache) error
 	GetUserDurations(ctx context.Context, targetDay string) ([]UserDuration, error)
+	GetDailySummaryCache(ctx context.Context, targetDay string) (*model.VoidStatCache, error)
+	UpsertDailySummaryCache(ctx context.Context, cache model.VoidStatCache) error
+	SumTotalDurationForDay(ctx context.Context, targetDay string) (int64, error)
 }
 
 type statRepository struct {
@@ -66,7 +69,7 @@ func (r *statRepository) GetBucketCache(ctx context.Context, targetDay string) (
 	defer cancel()
 
 	opts := options.Find().SetSort(bson.D{{Key: "bucket", Value: 1}})
-	cursor, err := r.cacheColl.Find(ctx, bson.M{"target_day": targetDay}, opts)
+	cursor, err := r.cacheColl.Find(ctx, bson.M{"target_day": targetDay, "bucket": bson.M{"$ne": "__summary__"}}, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -126,4 +129,65 @@ func (r *statRepository) GetUserDurations(ctx context.Context, targetDay string)
 		return nil, err
 	}
 	return results, nil
+}
+
+func (r *statRepository) GetDailySummaryCache(ctx context.Context, targetDay string) (*model.VoidStatCache, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	var cache model.VoidStatCache
+	err := r.cacheColl.FindOne(ctx, bson.M{"target_day": targetDay, "bucket": "__summary__"}).Decode(&cache)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &cache, nil
+}
+
+func (r *statRepository) UpsertDailySummaryCache(ctx context.Context, cache model.VoidStatCache) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	_, err := r.cacheColl.UpdateOne(ctx,
+		bson.M{"target_day": cache.TargetDay, "bucket": "__summary__"},
+		bson.M{"$set": bson.M{
+			"count":              cache.Count,
+			"total_duration_sec": cache.TotalDurationSec,
+			"updated_at":         cache.UpdatedAt,
+		}},
+		options.Update().SetUpsert(true),
+	)
+	return err
+}
+
+func (r *statRepository) SumTotalDurationForDay(ctx context.Context, targetDay string) (int64, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	pipeline := mongo.Pipeline{
+		{{Key: "$match", Value: bson.M{"target_day": targetDay}}},
+		{{Key: "$group", Value: bson.M{
+			"_id":   nil,
+			"total": bson.M{"$sum": "$duration_sec"},
+		}}},
+	}
+
+	cursor, err := r.sessionsColl.Aggregate(ctx, pipeline)
+	if err != nil {
+		return 0, err
+	}
+	defer cursor.Close(ctx)
+
+	var result struct {
+		Total int64 `bson:"total"`
+	}
+	if cursor.Next(ctx) {
+		if err := cursor.Decode(&result); err != nil {
+			return 0, err
+		}
+		return result.Total, nil
+	}
+	return 0, nil
 }

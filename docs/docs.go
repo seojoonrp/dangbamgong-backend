@@ -1634,6 +1634,9 @@ const docTemplate = `{
         "dangbamgong-backend_internal_dto.DailyStatResponse": {
             "type": "object",
             "properties": {
+                "allTotalDurationSec": {
+                    "type": "integer"
+                },
                 "buckets": {
                     "type": "array",
                     "items": {
@@ -1646,8 +1649,14 @@ const docTemplate = `{
                         "$ref": "#/definitions/dangbamgong-backend_internal_dto.VoidSessionItem"
                     }
                 },
+                "myTotalDurationSec": {
+                    "type": "integer"
+                },
                 "targetDay": {
                     "type": "string"
+                },
+                "totalSleptUsers": {
+                    "type": "integer"
                 }
             }
         },
