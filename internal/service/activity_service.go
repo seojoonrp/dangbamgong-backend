@@ -124,7 +124,7 @@ func (s *activityService) UpdateName(ctx context.Context, userID string, activit
 	if err != nil {
 		return domain.NewInternal("failed to check duplicate activity: " + err.Error())
 	}
-	if existing != nil {
+	if existing != nil && existing.ID != actOid {
 		return domain.NewConflict(domain.ErrActivityAlreadyExists, "activity already exists: "+name)
 	}
 

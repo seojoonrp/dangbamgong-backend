@@ -107,6 +107,9 @@ func (s *voidService) End(ctx context.Context, userID string, req dto.VoidEndReq
 		}
 	}
 
+	if user.CurrentVoidStartedAt == nil {
+		return nil, domain.NewInternal("void state is corrupted: started_at is nil")
+	}
 	startedAt := *user.CurrentVoidStartedAt
 	durationSec := int64(now.Sub(startedAt).Seconds())
 	targetDay := calcTargetDay(startedAt)

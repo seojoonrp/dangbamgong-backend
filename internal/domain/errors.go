@@ -57,6 +57,7 @@ const (
 	ErrRequestNotPending  ErrorCode = "REQUEST_NOT_PENDING"
 	ErrNotFriends         ErrorCode = "NOT_FRIENDS"
 	ErrFriendNotInVoid    ErrorCode = "FRIEND_NOT_IN_VOID"
+	ErrNudgeCooldown      ErrorCode = "NUDGE_COOLDOWN"
 	ErrInvalidRequestType ErrorCode = "INVALID_REQUEST_TYPE"
 )
 

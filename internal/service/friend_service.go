@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"dangbamgong-backend/internal/domain"
@@ -29,6 +30,8 @@ type friendService struct {
 	friendshipRepo    repository.FriendshipRepository
 	friendRequestRepo repository.FriendRequestRepository
 	notifSvc          NotificationService
+	nudgeMu           sync.Mutex
+	nudgeCooldown     map[string]time.Time
 }
 
 func NewFriendService(
@@ -44,6 +47,7 @@ func NewFriendService(
 		friendshipRepo:    fr,
 		friendRequestRepo: frr,
 		notifSvc:          ns,
+		nudgeCooldown:     make(map[string]time.Time),
 	}
 }
 
@@ -473,6 +477,17 @@ func (s *friendService) Nudge(ctx context.Context, userID string, targetID strin
 	if !target.IsInVoid {
 		return domain.NewBadRequest(domain.ErrFriendNotInVoid, "friend is not in void")
 	}
+
+	cooldownKey := userID + ":" + targetID
+	s.nudgeMu.Lock()
+	if lastNudge, ok := s.nudgeCooldown[cooldownKey]; ok {
+		if time.Since(lastNudge) < 5*time.Minute {
+			s.nudgeMu.Unlock()
+			return domain.NewBadRequest(domain.ErrNudgeCooldown, "nudge cooldown: please wait")
+		}
+	}
+	s.nudgeCooldown[cooldownKey] = time.Now()
+	s.nudgeMu.Unlock()
 
 	sender, err := s.userRepo.FindByID(ctx, oid)
 	if err == nil && sender != nil {

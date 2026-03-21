@@ -90,6 +90,8 @@ func (s *statService) GetDailyStat(ctx context.Context, userID string, targetDay
 	}
 
 	now := time.Now()
+	today := config.CalcTargetDay(now)
+	isToday := targetDay == today
 
 	// 필요한 버킷 목록 생성
 	expectedBuckets := generateBuckets(targetDay, now)
@@ -105,22 +107,26 @@ func (s *statService) GetDailyStat(ctx context.Context, userID string, targetDay
 		cachedSet[c.Bucket] = c.Count
 	}
 
-	// 미싱 버킷 확인
-	var missingBuckets []string
-	for _, b := range expectedBuckets {
-		if _, ok := cachedSet[b]; !ok {
-			missingBuckets = append(missingBuckets, b)
+	// 오늘이면 모든 버킷 재계산 (캐시가 stale할 수 있음), 과거면 미싱 버킷만
+	var bucketsToCompute []string
+	if isToday {
+		bucketsToCompute = expectedBuckets
+	} else {
+		for _, b := range expectedBuckets {
+			if _, ok := cachedSet[b]; !ok {
+				bucketsToCompute = append(bucketsToCompute, b)
+			}
 		}
 	}
 
-	// 미싱 버킷이 있으면 세션에서 계산 후 캐싱
-	if len(missingBuckets) > 0 {
+	// 계산할 버킷이 있으면 세션에서 계산 후 캐싱
+	if len(bucketsToCompute) > 0 {
 		sessions, err := s.voidSessionRepo.FindByTargetDay(ctx, targetDay)
 		if err != nil {
 			return nil, domain.NewInternal("failed to find sessions: " + err.Error())
 		}
 
-		computed := computeBucketCounts(targetDay, missingBuckets, sessions)
+		computed := computeBucketCounts(targetDay, bucketsToCompute, sessions)
 		if err := s.statRepo.UpsertBucketCache(ctx, computed); err != nil {
 			return nil, domain.NewInternal("failed to upsert cache: " + err.Error())
 		}
@@ -146,7 +152,6 @@ func (s *statService) GetDailyStat(ctx context.Context, userID string, targetDay
 	var totalSleptUsers int
 	var allTotalDurationSec int64
 
-	today := config.CalcTargetDay(now)
 	if targetDay != today {
 		// 과거 날짜: 캐시 조회
 		summary, err := s.statRepo.GetDailySummaryCache(ctx, targetDay)
