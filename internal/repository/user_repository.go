@@ -24,6 +24,7 @@ type UserRepository interface {
 	SearchByTagPrefix(ctx context.Context, prefix string, excludeIDs []primitive.ObjectID, limit int) ([]model.User, error)
 	FindByIDs(ctx context.Context, ids []primitive.ObjectID) ([]model.User, error)
 	FindUsersInVoid(ctx context.Context) ([]model.User, error)
+	CancelAllVoidStates(ctx context.Context) (int64, error)
 }
 
 type userRepository struct {
@@ -187,4 +188,22 @@ func (r *userRepository) FindUsersInVoid(ctx context.Context) ([]model.User, err
 		return nil, err
 	}
 	return result, nil
+}
+
+func (r *userRepository) CancelAllVoidStates(ctx context.Context) (int64, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	result, err := r.coll.UpdateMany(ctx,
+		bson.M{"is_in_void": true},
+		bson.M{"$set": bson.M{
+			"is_in_void":              false,
+			"current_void_started_at": nil,
+			"updated_at":              time.Now(),
+		}},
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.ModifiedCount, nil
 }

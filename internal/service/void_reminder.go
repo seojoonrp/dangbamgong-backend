@@ -79,6 +79,19 @@ func (s *VoidReminderScheduler) fire(userID primitive.ObjectID) {
 	}
 }
 
+func (s *VoidReminderScheduler) CancelAll() int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	count := len(s.timers)
+	for key, timer := range s.timers {
+		timer.Stop()
+		delete(s.timers, key)
+	}
+	log.Printf("[REMINDER] cancelled all %d reminders\n", count)
+	return count
+}
+
 func (s *VoidReminderScheduler) RecoverAll(ctx context.Context) {
 	users, err := s.userRepo.FindUsersInVoid(ctx)
 	if err != nil {

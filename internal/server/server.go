@@ -72,6 +72,9 @@ func NewServer() *http.Server {
 
 	reminderScheduler.RecoverAll(context.Background())
 
+	dayResetScheduler := service.NewDayResetScheduler(userRepo, statSvc, notifSvc, reminderScheduler)
+	dayResetScheduler.Start()
+
 	s := &Server{
 		port:         port,
 		health:       healthHandler,

@@ -12,7 +12,8 @@ const (
 	NotifVoidReminder  NotificationType = "VOID_REMINDER"
 	NotifFriendRequest NotificationType = "FRIEND_REQUEST"
 	NotifFriendAccept  NotificationType = "FRIEND_ACCEPT"
-	NotifFriendNudge   NotificationType = "FRIEND_NUDGE"
+	NotifFriendNudge    NotificationType = "FRIEND_NUDGE"
+	NotifVoidAutoCancel NotificationType = "VOID_AUTO_CANCEL"
 )
 
 type Notification struct {

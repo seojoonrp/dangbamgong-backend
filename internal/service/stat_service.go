@@ -20,6 +20,7 @@ type StatService interface {
 	GetHomeStat(ctx context.Context, userID string) (*dto.HomeStatResponse, error)
 	GetDailyStat(ctx context.Context, userID string, targetDay string) (*dto.DailyStatResponse, error)
 	GetMyVoidStat(ctx context.Context, userID string) (*dto.MyVoidStatResponse, error)
+	FinalizeDailyStats(ctx context.Context, targetDay string) error
 }
 
 type statService struct {
@@ -243,6 +244,45 @@ func (s *statService) GetMyVoidStat(ctx context.Context, userID string) (*dto.My
 		MaxDurationSec:     stats.MaxDurationSec,
 		MaxDurationDate:    stats.MaxDurationDate,
 	}, nil
+}
+
+func (s *statService) FinalizeDailyStats(ctx context.Context, targetDay string) error {
+	totalSleptUsers, allTotalDurationSec, err := s.computeDailySummary(ctx, targetDay)
+	if err != nil {
+		return fmt.Errorf("compute daily summary: %w", err)
+	}
+
+	now := time.Now()
+	if err := s.statRepo.UpsertDailySummaryCache(ctx, model.VoidStatCache{
+		TargetDay:        targetDay,
+		Bucket:           "__summary__",
+		Count:            totalSleptUsers,
+		TotalDurationSec: allTotalDurationSec,
+		UpdatedAt:        now,
+	}); err != nil {
+		return fmt.Errorf("upsert daily summary cache: %w", err)
+	}
+
+	// 과거 날짜의 모든 버킷을 생성하기 위해 다음날 16:00을 now로 사용
+	dayEnd, err := time.ParseInLocation("2006-01-02", targetDay, config.KST)
+	if err != nil {
+		return fmt.Errorf("parse target day: %w", err)
+	}
+	dayEnd = dayEnd.Add(time.Duration(config.DayStartHour)*time.Hour + 24*time.Hour)
+
+	allBuckets := generateBuckets(targetDay, dayEnd)
+
+	sessions, err := s.voidSessionRepo.FindByTargetDay(ctx, targetDay)
+	if err != nil {
+		return fmt.Errorf("find sessions: %w", err)
+	}
+
+	computed := computeBucketCounts(targetDay, allBuckets, sessions)
+	if err := s.statRepo.UpsertBucketCache(ctx, computed); err != nil {
+		return fmt.Errorf("upsert bucket cache: %w", err)
+	}
+
+	return nil
 }
 
 // computeDailySummary 는 해당 날짜의 전체 유저 수와 전체 공백 시간을 계산한다.
