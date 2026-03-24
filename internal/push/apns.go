@@ -21,11 +21,11 @@ type apnsClient struct {
 }
 
 func NewAPNsClient() PushClient {
-	keyPath := os.Getenv("APNS_KEY_PATH")
-	keyID := os.Getenv("APNS_KEY_ID")
-	teamID := os.Getenv("APNS_TEAM_ID")
-	topic := os.Getenv("APNS_TOPIC")
-	env := os.Getenv("APNS_ENV")
+	keyPath := os.Getenv("APPLE_KEY_PATH")
+	keyID := os.Getenv("APPLE_KEY_ID")
+	teamID := os.Getenv("APPLE_TEAM_ID")
+	topic := os.Getenv("APPLE_TOPIC")
+	env := os.Getenv("APPLE_ENV")
 
 	if keyPath == "" || keyID == "" || teamID == "" || topic == "" {
 		log.Println("[PUSH] APNs not configured, using noop client")
