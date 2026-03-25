@@ -16,7 +16,10 @@ type NotificationRepository interface {
 	Create(ctx context.Context, notif *model.Notification) error
 	FindByUserID(ctx context.Context, userID primitive.ObjectID, limit int, offset int) ([]model.Notification, error)
 	MarkAsRead(ctx context.Context, notifID primitive.ObjectID, userID primitive.ObjectID) (int64, error)
+	MarkAllAsRead(ctx context.Context, userID primitive.ObjectID) (int64, error)
 	CountUnread(ctx context.Context, userID primitive.ObjectID) (int, error)
+	Delete(ctx context.Context, notifID primitive.ObjectID, userID primitive.ObjectID) (int64, error)
+	DeleteAllRead(ctx context.Context, userID primitive.ObjectID) (int64, error)
 }
 
 type notificationRepository struct {
@@ -76,6 +79,21 @@ func (r *notificationRepository) MarkAsRead(ctx context.Context, notifID primiti
 	return result.ModifiedCount, nil
 }
 
+func (r *notificationRepository) MarkAllAsRead(ctx context.Context, userID primitive.ObjectID) (int64, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	result, err := r.coll.UpdateMany(ctx,
+		bson.M{"user_id": userID, "is_read": false},
+		bson.M{"$set": bson.M{"is_read": true}},
+	)
+	if err != nil {
+		return 0, err
+	}
+
+	return result.ModifiedCount, nil
+}
+
 func (r *notificationRepository) CountUnread(ctx context.Context, userID primitive.ObjectID) (int, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
@@ -85,4 +103,28 @@ func (r *notificationRepository) CountUnread(ctx context.Context, userID primiti
 		return 0, err
 	}
 	return int(count), nil
+}
+
+func (r *notificationRepository) Delete(ctx context.Context, notifID primitive.ObjectID, userID primitive.ObjectID) (int64, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	result, err := r.coll.DeleteOne(ctx, bson.M{"_id": notifID, "user_id": userID})
+	if err != nil {
+		return 0, err
+	}
+
+	return result.DeletedCount, nil
+}
+
+func (r *notificationRepository) DeleteAllRead(ctx context.Context, userID primitive.ObjectID) (int64, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	result, err := r.coll.DeleteMany(ctx, bson.M{"user_id": userID, "is_read": true})
+	if err != nil {
+		return 0, err
+	}
+
+	return result.DeletedCount, nil
 }

@@ -23,7 +23,10 @@ type NotificationService interface {
 
 	GetNotifications(ctx context.Context, userID string, limit int, offset int) (*dto.NotificationListResponse, error)
 	MarkAsRead(ctx context.Context, userID string, notifID string) error
+	MarkAllAsRead(ctx context.Context, userID string) error
 	GetUnreadCount(ctx context.Context, userID string) (*dto.UnreadCountResponse, error)
+	DeleteNotification(ctx context.Context, userID string, notifID string) error
+	DeleteAllRead(ctx context.Context, userID string) error
 }
 
 type notificationService struct {
@@ -206,6 +209,19 @@ func (s *notificationService) MarkAsRead(ctx context.Context, userID string, not
 	return nil
 }
 
+func (s *notificationService) MarkAllAsRead(ctx context.Context, userID string) error {
+	oid, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return domain.NewUnauthorized(domain.ErrUnauthorized, "invalid user id")
+	}
+
+	_, err = s.notifRepo.MarkAllAsRead(ctx, oid)
+	if err != nil {
+		return domain.NewInternal("failed to mark all as read: " + err.Error())
+	}
+	return nil
+}
+
 func (s *notificationService) GetUnreadCount(ctx context.Context, userID string) (*dto.UnreadCountResponse, error) {
 	oid, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
@@ -218,4 +234,38 @@ func (s *notificationService) GetUnreadCount(ctx context.Context, userID string)
 	}
 
 	return &dto.UnreadCountResponse{Count: count}, nil
+}
+
+func (s *notificationService) DeleteNotification(ctx context.Context, userID string, notifID string) error {
+	userOid, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return domain.NewUnauthorized(domain.ErrUnauthorized, "invalid user id")
+	}
+
+	notifOid, err := primitive.ObjectIDFromHex(notifID)
+	if err != nil {
+		return domain.NewBadRequest(domain.ErrNotificationNotFound, "invalid notification id")
+	}
+
+	deletedCount, err := s.notifRepo.Delete(ctx, notifOid, userOid)
+	if err != nil {
+		return domain.NewInternal("failed to delete notification: " + err.Error())
+	}
+	if deletedCount == 0 {
+		return domain.NewNotFound(domain.ErrNotificationNotFound, "notification not found")
+	}
+	return nil
+}
+
+func (s *notificationService) DeleteAllRead(ctx context.Context, userID string) error {
+	oid, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return domain.NewUnauthorized(domain.ErrUnauthorized, "invalid user id")
+	}
+
+	_, err = s.notifRepo.DeleteAllRead(ctx, oid)
+	if err != nil {
+		return domain.NewInternal("failed to delete read notifications: " + err.Error())
+	}
+	return nil
 }

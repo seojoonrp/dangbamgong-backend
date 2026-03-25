@@ -105,7 +105,10 @@ func (s *Server) RegisterRoutes() http.Handler {
 	// Notification - all protected
 	notifGroup := e.Group("/notifications", middleware.JWTAuth())
 	notifGroup.GET("", s.notification.GetNotifications)
+	notifGroup.PATCH("/read-all", s.notification.MarkAllAsRead)
 	notifGroup.PATCH("/:notification_id/read", s.notification.MarkAsRead)
+	notifGroup.DELETE("/read", s.notification.DeleteAllRead)
+	notifGroup.DELETE("/:notification_id", s.notification.DeleteNotification)
 	notifGroup.GET("/unread-count", s.notification.GetUnreadCount)
 
 	// Device - all protected

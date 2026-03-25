@@ -64,6 +64,63 @@ func (h *NotificationHandler) MarkAsRead(c echo.Context) error {
 	return dto.SuccessEmpty(c, http.StatusOK)
 }
 
+// MarkAllAsRead godoc
+// @Summary      알림 전체 읽음 처리
+// @Description  유저의 읽지 않은 알림을 모두 읽음 상태로 변경합니다
+// @Tags         Notifications
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  dto.Response[any]
+// @Router       /notifications/read-all [patch]
+func (h *NotificationHandler) MarkAllAsRead(c echo.Context) error {
+	userID := c.Get(middleware.ContextKeyUserID).(string)
+
+	if err := h.service.MarkAllAsRead(c.Request().Context(), userID); err != nil {
+		return err
+	}
+
+	return dto.SuccessEmpty(c, http.StatusOK)
+}
+
+// DeleteNotification godoc
+// @Summary      알림 삭제
+// @Description  특정 알림을 삭제합니다
+// @Tags         Notifications
+// @Produce      json
+// @Security     BearerAuth
+// @Param        notification_id  path  string  true  "알림 ID"
+// @Success      200  {object}  dto.Response[any]
+// @Failure      404  {object}  dto.ErrorResponse  "NOTIFICATION_NOT_FOUND"
+// @Router       /notifications/{notification_id} [delete]
+func (h *NotificationHandler) DeleteNotification(c echo.Context) error {
+	userID := c.Get(middleware.ContextKeyUserID).(string)
+	notifID := c.Param("notification_id")
+
+	if err := h.service.DeleteNotification(c.Request().Context(), userID, notifID); err != nil {
+		return err
+	}
+
+	return dto.SuccessEmpty(c, http.StatusOK)
+}
+
+// DeleteAllRead godoc
+// @Summary      읽은 알림 전체 삭제
+// @Description  유저의 읽은 알림을 모두 삭제합니다
+// @Tags         Notifications
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  dto.Response[any]
+// @Router       /notifications/read [delete]
+func (h *NotificationHandler) DeleteAllRead(c echo.Context) error {
+	userID := c.Get(middleware.ContextKeyUserID).(string)
+
+	if err := h.service.DeleteAllRead(c.Request().Context(), userID); err != nil {
+		return err
+	}
+
+	return dto.SuccessEmpty(c, http.StatusOK)
+}
+
 // GetUnreadCount godoc
 // @Summary      읽지 않은 알림 수 조회
 // @Description  읽지 않은 알림의 개수를 반환합니다
