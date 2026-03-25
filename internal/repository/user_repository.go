@@ -25,6 +25,7 @@ type UserRepository interface {
 	FindByIDs(ctx context.Context, ids []primitive.ObjectID) ([]model.User, error)
 	FindUsersInVoid(ctx context.Context) ([]model.User, error)
 	CancelAllVoidStates(ctx context.Context) (int64, error)
+	UpdateFriendRequestLastReadAt(ctx context.Context, id primitive.ObjectID, t time.Time) error
 }
 
 type userRepository struct {
@@ -206,4 +207,16 @@ func (r *userRepository) CancelAllVoidStates(ctx context.Context) (int64, error)
 		return 0, err
 	}
 	return result.ModifiedCount, nil
+}
+
+func (r *userRepository) UpdateFriendRequestLastReadAt(ctx context.Context, id primitive.ObjectID, t time.Time) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	// TODO: UpdateByID를 사용해서 friend_request_last_read_at과 updated_at을 $set으로 업데이트하세요.
+	// 힌트: UpdateNickname 메서드의 패턴을 참고하세요.
+	_, err := r.coll.UpdateByID(ctx, id, bson.M{
+		"$set": bson.M{"friend_request_last_read_at": t},
+	})
+	return err
 }

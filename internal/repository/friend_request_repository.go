@@ -22,6 +22,7 @@ type FriendRequestRepository interface {
 	DeleteByID(ctx context.Context, id primitive.ObjectID) error
 	DeleteByUserPair(ctx context.Context, userA, userB primitive.ObjectID) error
 	DeleteByUserID(ctx context.Context, userID primitive.ObjectID) error
+	CountUnreadByReceiverID(ctx context.Context, receiverID primitive.ObjectID, lastReadAt *time.Time) (int, error)
 }
 
 type friendRequestRepository struct {
@@ -158,4 +159,27 @@ func (r *friendRequestRepository) DeleteByUserID(ctx context.Context, userID pri
 		bson.M{"receiver_id": userID},
 	}})
 	return err
+}
+
+func (r *friendRequestRepository) CountUnreadByReceiverID(ctx context.Context, receiverID primitive.ObjectID, lastReadAt *time.Time) (int, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	// TODO: receiver_id, status가 PENDING인 조건의 filter를 만드세요.
+	// lastReadAt이 nil이 아니면 created_at > lastReadAt 조건을 추가하세요. (nil이면 모든 PENDING을 세야 합니다)
+	// 힌트: bson.M으로 filter를 구성하고, CountDocuments를 사용하세요.
+	// 참고: FindBySenderID 메서드에서 bson.M 조건 구성 패턴을 볼 수 있습니다.
+	filter := bson.M{
+		"receiver_id": receiverID,
+		"status":      model.FriendRequestPending,
+	}
+	if lastReadAt != nil {
+		filter["created_at"] = bson.M{"$gt": *lastReadAt}
+	}
+
+	count, err := r.coll.CountDocuments(ctx, filter)
+	if err != nil {
+		return 0, err
+	}
+	return int(count), nil
 }

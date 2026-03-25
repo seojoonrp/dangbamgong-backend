@@ -23,16 +23,17 @@ type NotificationSettings struct {
 }
 
 type User struct {
-	ID                   primitive.ObjectID   `bson:"_id,omitempty" json:"id"`
-	SocialProvider       SocialProvider       `bson:"social_provider" json:"socialProvider"`
-	SocialID             string               `bson:"social_id" json:"socialId"`
-	Nickname             string               `bson:"nickname" json:"nickname,omitempty"`
-	Tag                  string               `bson:"tag" json:"tag"`
-	IsInVoid             bool                 `bson:"is_in_void" json:"isInVoid"`
-	CurrentVoidStartedAt *time.Time           `bson:"current_void_started_at,omitempty" json:"currentVoidStartedAt"`
-	LastVoidEndedAt      *time.Time           `bson:"last_void_ended_at,omitempty" json:"lastVoidEndedAt"`
-	NotificationSettings NotificationSettings `bson:"notification_settings" json:"notificationSettings"`
-	AppleRefreshToken    string               `bson:"apple_refresh_token,omitempty" json:"-"`
-	CreatedAt            time.Time            `bson:"created_at" json:"createdAt"`
-	UpdatedAt            time.Time            `bson:"updated_at" json:"updatedAt"`
+	ID                      primitive.ObjectID   `bson:"_id,omitempty" json:"id"`
+	SocialProvider          SocialProvider       `bson:"social_provider" json:"socialProvider"`
+	SocialID                string               `bson:"social_id" json:"socialId"`
+	Nickname                string               `bson:"nickname" json:"nickname,omitempty"`
+	Tag                     string               `bson:"tag" json:"tag"`
+	IsInVoid                bool                 `bson:"is_in_void" json:"isInVoid"`
+	CurrentVoidStartedAt    *time.Time           `bson:"current_void_started_at,omitempty" json:"currentVoidStartedAt"`
+	LastVoidEndedAt         *time.Time           `bson:"last_void_ended_at,omitempty" json:"lastVoidEndedAt"`
+	NotificationSettings    NotificationSettings `bson:"notification_settings" json:"notificationSettings"`
+	FriendRequestLastReadAt *time.Time           `bson:"friend_request_last_read_at,omitempty" json:"-"`
+	AppleRefreshToken       string               `bson:"apple_refresh_token,omitempty" json:"-"`
+	CreatedAt               time.Time            `bson:"created_at" json:"createdAt"`
+	UpdatedAt               time.Time            `bson:"updated_at" json:"updatedAt"`
 }
