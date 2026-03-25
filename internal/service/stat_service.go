@@ -21,6 +21,7 @@ type StatService interface {
 	GetDailyStat(ctx context.Context, userID string, targetDay string) (*dto.DailyStatResponse, error)
 	GetMyVoidStat(ctx context.Context, userID string) (*dto.MyVoidStatResponse, error)
 	FinalizeDailyStats(ctx context.Context, targetDay string) error
+	RebuildAllDailyStats(ctx context.Context) error
 }
 
 type statService struct {
@@ -282,6 +283,20 @@ func (s *statService) FinalizeDailyStats(ctx context.Context, targetDay string) 
 		return fmt.Errorf("upsert bucket cache: %w", err)
 	}
 
+	return nil
+}
+
+func (s *statService) RebuildAllDailyStats(ctx context.Context) error {
+	days, err := s.statRepo.GetDistinctTargetDays(ctx)
+	if err != nil {
+		return domain.NewInternal("failed to get distinct target days: " + err.Error())
+	}
+
+	for _, day := range days {
+		if err := s.FinalizeDailyStats(ctx, day); err != nil {
+			return domain.NewInternal("failed to finalize stats for " + day + ": " + err.Error())
+		}
+	}
 	return nil
 }
 

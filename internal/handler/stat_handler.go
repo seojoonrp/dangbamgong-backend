@@ -76,3 +76,17 @@ func (h *StatHandler) GetDailyStat(c echo.Context) error {
 
 	return dto.Success(c, http.StatusOK, resp)
 }
+
+// DoStatCacheJungsanghwa godoc
+// @Summary      통계 캐시 정상화
+// @Description  모든 날짜의 통계 캐시를 세션 데이터 기반으로 재계산합니다 (non-production 전용)
+// @Tags         Stats
+// @Produce      json
+// @Success      200  {object}  dto.Response[any]
+// @Router       /stats/rebuild-cache [post]
+func (h *StatHandler) DoStatCacheJungsanghwa(c echo.Context) error {
+	if err := h.service.RebuildAllDailyStats(c.Request().Context()); err != nil {
+		return err
+	}
+	return dto.SuccessEmpty(c, http.StatusOK)
+}

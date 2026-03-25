@@ -98,6 +98,9 @@ func (s *Server) RegisterRoutes() http.Handler {
 	statGroup.GET("/home", s.stat.GetHomeStat)
 	statGroup.GET("/daily", s.stat.GetDailyStat)
 	statGroup.GET("/me", s.stat.GetMyVoidStat)
+	if os.Getenv("APP_ENV") != "production" {
+		statGroup.POST("/rebuild-cache", s.stat.DoStatCacheJungsanghwa)
+	}
 
 	// Notification - all protected
 	notifGroup := e.Group("/notifications", middleware.JWTAuth())

@@ -20,7 +20,7 @@ func NewVoidHandler(s service.VoidService) *VoidHandler {
 
 // Start godoc
 // @Summary      공백 시작
-// @Description  공백(밤의 공백) 세션을 시작합니다. 이미 공백 중이면 실패합니다.
+// @Description  공백 세션을 시작합니다.
 // @Tags         Void
 // @Produce      json
 // @Security     BearerAuth

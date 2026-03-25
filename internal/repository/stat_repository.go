@@ -26,6 +26,7 @@ type StatRepository interface {
 	GetDailySummaryCache(ctx context.Context, targetDay string) (*model.VoidStatCache, error)
 	UpsertDailySummaryCache(ctx context.Context, cache model.VoidStatCache) error
 	SumTotalDurationForDay(ctx context.Context, targetDay string) (int64, error)
+	GetDistinctTargetDays(ctx context.Context) ([]string, error)
 }
 
 type statRepository struct {
@@ -160,6 +161,24 @@ func (r *statRepository) UpsertDailySummaryCache(ctx context.Context, cache mode
 		options.Update().SetUpsert(true),
 	)
 	return err
+}
+
+func (r *statRepository) GetDistinctTargetDays(ctx context.Context) ([]string, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	result, err := r.sessionsColl.Distinct(ctx, "target_day", bson.M{})
+	if err != nil {
+		return nil, err
+	}
+
+	days := make([]string, 0, len(result))
+	for _, v := range result {
+		if s, ok := v.(string); ok {
+			days = append(days, s)
+		}
+	}
+	return days, nil
 }
 
 func (r *statRepository) SumTotalDurationForDay(ctx context.Context, targetDay string) (int64, error) {
