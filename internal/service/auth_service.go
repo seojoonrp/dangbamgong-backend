@@ -25,16 +25,38 @@ type AuthService interface {
 }
 
 type authService struct {
-	userRepo       repository.UserRepository
-	activityRepo   repository.ActivityRepository
-	socialVerifier auth.SocialVerifier
+	userRepo          repository.UserRepository
+	activityRepo      repository.ActivityRepository
+	friendshipRepo    repository.FriendshipRepository
+	friendRequestRepo repository.FriendRequestRepository
+	voidSessionRepo   repository.VoidSessionRepository
+	blockRepo         repository.BlockRepository
+	deviceTokenRepo   repository.DeviceTokenRepository
+	notifRepo         repository.NotificationRepository
+	socialVerifier    auth.SocialVerifier
 }
 
-func NewAuthService(ur repository.UserRepository, ar repository.ActivityRepository, socialVerifier auth.SocialVerifier) AuthService {
+func NewAuthService(
+	ur repository.UserRepository,
+	ar repository.ActivityRepository,
+	fr repository.FriendshipRepository,
+	frr repository.FriendRequestRepository,
+	vsr repository.VoidSessionRepository,
+	br repository.BlockRepository,
+	dtr repository.DeviceTokenRepository,
+	nr repository.NotificationRepository,
+	socialVerifier auth.SocialVerifier,
+) AuthService {
 	return &authService{
-		userRepo:       ur,
-		activityRepo:   ar,
-		socialVerifier: socialVerifier,
+		userRepo:          ur,
+		activityRepo:      ar,
+		friendshipRepo:    fr,
+		friendRequestRepo: frr,
+		voidSessionRepo:   vsr,
+		blockRepo:         br,
+		deviceTokenRepo:   dtr,
+		notifRepo:         nr,
+		socialVerifier:    socialVerifier,
 	}
 }
 
@@ -139,9 +161,34 @@ func (s *authService) Withdraw(ctx context.Context, userID string) error {
 		return domain.NewUnauthorized(domain.ErrUnauthorized, "user not found")
 	}
 
-	// TODO: revoke social account (Apple uses apple_refresh_token)
-	// TODO: delete related data (activities, friends, void sessions, etc.)
+	// Apple 계정인 경우 refresh token revoke
+	if user.SocialProvider == model.ProviderApple && user.AppleRefreshToken != "" {
+		if err := auth.RevokeAppleToken(ctx, user.AppleRefreshToken); err != nil {
+			return domain.NewInternal("failed to revoke apple token: " + err.Error())
+		}
+	}
 
+	// 연관 데이터 hard delete
+	deleteOps := []struct {
+		name string
+		fn   func() error
+	}{
+		{"activities", func() error { return s.activityRepo.DeleteByUserID(ctx, oid) }},
+		{"friendships", func() error { return s.friendshipRepo.DeleteByUserID(ctx, oid) }},
+		{"friend_requests", func() error { return s.friendRequestRepo.DeleteByUserID(ctx, oid) }},
+		{"void_sessions", func() error { return s.voidSessionRepo.DeleteByUserID(ctx, oid) }},
+		{"blocks", func() error { return s.blockRepo.DeleteByUserID(ctx, oid) }},
+		{"device_tokens", func() error { return s.deviceTokenRepo.DeleteByUserID(ctx, oid) }},
+		{"notifications", func() error { return s.notifRepo.DeleteByUserID(ctx, oid) }},
+	}
+
+	for _, op := range deleteOps {
+		if err := op.fn(); err != nil {
+			return domain.NewInternal("failed to delete " + op.name + ": " + err.Error())
+		}
+	}
+
+	// 마지막으로 유저 삭제
 	if err := s.userRepo.DeleteByID(ctx, oid); err != nil {
 		return domain.NewInternal("failed to delete user: " + err.Error())
 	}

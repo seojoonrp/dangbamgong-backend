@@ -22,6 +22,8 @@ type FriendService interface {
 	RejectRequest(ctx context.Context, userID string, requestID string) error
 	DeleteRequest(ctx context.Context, userID string, requestID string) error
 	Nudge(ctx context.Context, userID string, targetID string) error
+	GetUnreadRequestCount(ctx context.Context, userID string) (*dto.UnreadCountResponse, error)
+	MarkRequestsAsRead(ctx context.Context, userID string) error
 }
 
 type friendService struct {
@@ -492,6 +494,41 @@ func (s *friendService) Nudge(ctx context.Context, userID string, targetID strin
 	sender, err := s.userRepo.FindByID(ctx, oid)
 	if err == nil && sender != nil {
 		_ = s.notifSvc.SendFriendNudge(ctx, targetOid, sender.Nickname)
+	}
+
+	return nil
+}
+
+func (s *friendService) GetUnreadRequestCount(ctx context.Context, userID string) (*dto.UnreadCountResponse, error) {
+	oid, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return nil, domain.NewUnauthorized(domain.ErrUnauthorized, "invalid user id")
+	}
+
+	user, err := s.userRepo.FindByID(ctx, oid)
+	if err != nil {
+		return nil, domain.NewInternal("failed to find user: " + err.Error())
+	}
+	if user == nil {
+		return nil, domain.NewUnauthorized(domain.ErrUnauthorized, "user not found")
+	}
+
+	count, err := s.friendRequestRepo.CountUnreadByReceiverID(ctx, oid, user.FriendRequestLastReadAt)
+	if err != nil {
+		return nil, domain.NewInternal("failed to count unread requests: " + err.Error())
+	}
+
+	return &dto.UnreadCountResponse{Count: count}, nil
+}
+
+func (s *friendService) MarkRequestsAsRead(ctx context.Context, userID string) error {
+	oid, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return domain.NewUnauthorized(domain.ErrUnauthorized, "invalid user id")
+	}
+
+	if err := s.userRepo.UpdateFriendRequestLastReadAt(ctx, oid, time.Now()); err != nil {
+		return domain.NewInternal("failed to mark requests as read: " + err.Error())
 	}
 
 	return nil

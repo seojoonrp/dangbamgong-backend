@@ -51,7 +51,7 @@ func NewServer() *http.Server {
 	statRepo := repository.NewStatRepository(db)
 
 	healthSvc := service.NewHealthService(healthRepo)
-	authSvc := service.NewAuthService(userRepo, activityRepo, socialVerifier)
+	authSvc := service.NewAuthService(userRepo, activityRepo, friendshipRepo, friendRequestRepo, voidSessionRepo, blockRepo, deviceTokenRepo, notifRepo, socialVerifier)
 	activitySvc := service.NewActivityService(activityRepo)
 	userSvc := service.NewUserService(userRepo, blockRepo, friendshipRepo, friendRequestRepo)
 	notifSvc := service.NewNotificationService(notifRepo, deviceTokenRepo, userRepo, pushClient)

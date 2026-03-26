@@ -20,6 +20,7 @@ type NotificationRepository interface {
 	CountUnread(ctx context.Context, userID primitive.ObjectID) (int, error)
 	Delete(ctx context.Context, notifID primitive.ObjectID, userID primitive.ObjectID) (int64, error)
 	DeleteAllRead(ctx context.Context, userID primitive.ObjectID) (int64, error)
+	DeleteByUserID(ctx context.Context, userID primitive.ObjectID) error
 }
 
 type notificationRepository struct {
@@ -127,4 +128,12 @@ func (r *notificationRepository) DeleteAllRead(ctx context.Context, userID primi
 	}
 
 	return result.DeletedCount, nil
+}
+
+func (r *notificationRepository) DeleteByUserID(ctx context.Context, userID primitive.ObjectID) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	_, err := r.coll.DeleteMany(ctx, bson.M{"user_id": userID})
+	return err
 }

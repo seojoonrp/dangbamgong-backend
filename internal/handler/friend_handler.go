@@ -176,6 +176,43 @@ func (h *FriendHandler) DeleteRequest(c echo.Context) error {
 	return dto.SuccessEmpty(c, http.StatusOK)
 }
 
+// GetUnreadRequestCount godoc
+// @Summary      안 읽은 친구 요청 수 조회
+// @Description  마지막으로 읽은 시점 이후에 받은 대기 중인 친구 요청 수를 반환합니다
+// @Tags         Friends
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  dto.Response[dto.UnreadCountResponse]
+// @Router       /friends/requests/unread-count [get]
+func (h *FriendHandler) GetUnreadRequestCount(c echo.Context) error {
+	userID := c.Get(middleware.ContextKeyUserID).(string)
+
+	resp, err := h.service.GetUnreadRequestCount(c.Request().Context(), userID)
+	if err != nil {
+		return err
+	}
+
+	return dto.Success(c, http.StatusOK, resp)
+}
+
+// MarkRequestsAsRead godoc
+// @Summary      친구 요청 읽음 처리
+// @Description  받은 친구 요청 목록을 모두 읽음으로 표시합니다. 이후 unread-count가 0이 됩니다.
+// @Tags         Friends
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  dto.Response[any]
+// @Router       /friends/requests/read [patch]
+func (h *FriendHandler) MarkRequestsAsRead(c echo.Context) error {
+	userID := c.Get(middleware.ContextKeyUserID).(string)
+
+	if err := h.service.MarkRequestsAsRead(c.Request().Context(), userID); err != nil {
+		return err
+	}
+
+	return dto.SuccessEmpty(c, http.StatusOK)
+}
+
 // Nudge godoc
 // @Summary      친구 찌르기
 // @Description  공백 중인 친구에게 알림을 보냅니다. 친구가 공백 중이 아니면 실패합니다.

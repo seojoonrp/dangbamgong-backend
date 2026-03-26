@@ -216,7 +216,7 @@ func (r *userRepository) UpdateFriendRequestLastReadAt(ctx context.Context, id p
 	// TODO: UpdateByID를 사용해서 friend_request_last_read_at과 updated_at을 $set으로 업데이트하세요.
 	// 힌트: UpdateNickname 메서드의 패턴을 참고하세요.
 	_, err := r.coll.UpdateByID(ctx, id, bson.M{
-		"$set": bson.M{"friend_request_last_read_at": t},
+		"$set": bson.M{"friend_request_last_read_at": t, "updated_at": time.Now()},
 	})
 	return err
 }

@@ -88,6 +88,8 @@ func (s *Server) RegisterRoutes() http.Handler {
 	friendGroup.DELETE("/:user_id", s.friend.RemoveFriend)
 	friendGroup.GET("/requests", s.friend.GetRequests)
 	friendGroup.POST("/requests", s.friend.SendRequest)
+	friendGroup.GET("/requests/unread-count", s.friend.GetUnreadRequestCount)
+	friendGroup.PATCH("/requests/read", s.friend.MarkRequestsAsRead)
 	friendGroup.POST("/requests/:request_id/accept", s.friend.AcceptRequest)
 	friendGroup.POST("/requests/:request_id/reject", s.friend.RejectRequest)
 	friendGroup.DELETE("/requests/:request_id", s.friend.DeleteRequest)
