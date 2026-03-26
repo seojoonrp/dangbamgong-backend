@@ -75,6 +75,13 @@ func NewServer() *http.Server {
 	dayResetScheduler := service.NewDayResetScheduler(userRepo, statSvc, notifSvc, reminderScheduler)
 	dayResetScheduler.Start()
 
+	if os.Getenv("APP_ENV") != "production" {
+		fakeDataSvc := service.NewFakeDataService(userRepo, voidSessionRepo, statSvc)
+		fakeDataScheduler := service.NewFakeDataScheduler(fakeDataSvc)
+		fakeDataScheduler.Start()
+		fakeDataScheduler.RunOnStartup()
+	}
+
 	s := &Server{
 		port:         port,
 		health:       healthHandler,
