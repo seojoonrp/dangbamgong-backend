@@ -576,6 +576,56 @@ const docTemplate = `{
                 }
             }
         },
+        "/friends/requests/read": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "받은 친구 요청 목록을 모두 읽음으로 표시합니다. 이후 unread-count가 0이 됩니다.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Friends"
+                ],
+                "summary": "친구 요청 읽음 처리",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dangbamgong-backend_internal_dto.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/friends/requests/unread-count": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "마지막으로 읽은 시점 이후에 받은 대기 중인 친구 요청 수를 반환합니다",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Friends"
+                ],
+                "summary": "안 읽은 친구 요청 수 조회",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_UnreadCountResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/friends/requests/{request_id}": {
             "delete": {
                 "security": [
@@ -856,6 +906,56 @@ const docTemplate = `{
                 }
             }
         },
+        "/notifications/read": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "유저의 읽은 알림을 모두 삭제합니다",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "읽은 알림 전체 삭제",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dangbamgong-backend_internal_dto.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/notifications/read-all": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "유저의 읽지 않은 알림을 모두 읽음 상태로 변경합니다",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "알림 전체 읽음 처리",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dangbamgong-backend_internal_dto.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/notifications/unread-count": {
             "get": {
                 "security": [
@@ -876,6 +976,46 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_UnreadCountResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/notifications/{notification_id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "특정 알림을 삭제합니다",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "알림 삭제",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "알림 ID",
+                        "name": "notification_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dangbamgong-backend_internal_dto.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "NOTIFICATION_NOT_FOUND",
+                        "schema": {
+                            "$ref": "#/definitions/dangbamgong-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1000,6 +1140,26 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/dangbamgong-backend_internal_dto.Response-dangbamgong-backend_internal_dto_MyVoidStatResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/stats/rebuild-cache": {
+            "post": {
+                "description": "모든 날짜의 통계 캐시를 세션 데이터 기반으로 재계산합니다 (non-production 전용)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Stats"
+                ],
+                "summary": "통계 캐시 정상화",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dangbamgong-backend_internal_dto.Response-any"
                         }
                     }
                 }
@@ -1382,7 +1542,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "공백(밤의 공백) 세션을 시작합니다. 이미 공백 중이면 실패합니다.",
+                "description": "공백 세션을 시작합니다.",
                 "produces": [
                     "application/json"
                 ],
@@ -1477,6 +1637,7 @@ const docTemplate = `{
                 "REQUEST_NOT_PENDING",
                 "NOT_FRIENDS",
                 "FRIEND_NOT_IN_VOID",
+                "NUDGE_COOLDOWN",
                 "INVALID_REQUEST_TYPE"
             ],
             "x-enum-varnames": [
@@ -1507,6 +1668,7 @@ const docTemplate = `{
                 "ErrRequestNotPending",
                 "ErrNotFriends",
                 "ErrFriendNotInVoid",
+                "ErrNudgeCooldown",
                 "ErrInvalidRequestType"
             ]
         },
@@ -1766,6 +1928,9 @@ const docTemplate = `{
             "properties": {
                 "averageDurationSec": {
                     "type": "integer"
+                },
+                "maxDurationDate": {
+                    "type": "string"
                 },
                 "maxDurationSec": {
                     "type": "integer"
@@ -2235,6 +2400,9 @@ const docTemplate = `{
                 "notificationSettings": {
                     "$ref": "#/definitions/dangbamgong-backend_internal_dto.NotificationSettings"
                 },
+                "socialProvider": {
+                    "type": "string"
+                },
                 "tag": {
                     "type": "string"
                 }
@@ -2244,6 +2412,9 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "isBlocked": {
+                    "type": "boolean"
+                },
+                "isFriend": {
                     "type": "boolean"
                 },
                 "nickname": {

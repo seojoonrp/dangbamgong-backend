@@ -35,6 +35,7 @@ func NewServer() *http.Server {
 	port, _ := strconv.Atoi(os.Getenv("PORT"))
 
 	db := database.New()
+	database.EnsureIndexes(db)
 
 	socialVerifier := auth.NewSocialVerifier()
 	pushClient := push.NewAPNsClient()

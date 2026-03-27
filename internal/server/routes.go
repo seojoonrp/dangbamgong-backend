@@ -43,8 +43,10 @@ func (s *Server) RegisterRoutes() http.Handler {
 	e.GET("/", s.health.HelloWorld)
 	e.GET("/health", s.health.Health)
 
+	v1 := e.Group("/api/v1")
+
 	// Auth - public
-	authGroup := e.Group("/auth")
+	authGroup := v1.Group("/auth")
 	authGroup.POST("/login", s.auth.Login)
 	if os.Getenv("APP_ENV") != "production" {
 		authGroup.POST("/login/test", s.auth.TestLogin)
@@ -56,14 +58,14 @@ func (s *Server) RegisterRoutes() http.Handler {
 	authProtected.DELETE("/withdraw", s.auth.Withdraw)
 
 	// Activity - all protected
-	activityGroup := e.Group("/activities", middleware.JWTAuth())
+	activityGroup := v1.Group("/activities", middleware.JWTAuth())
 	activityGroup.GET("", s.activity.List)
 	activityGroup.POST("", s.activity.Create)
 	activityGroup.PATCH("/:activity_id", s.activity.UpdateName)
 	activityGroup.DELETE("/:activity_id", s.activity.Delete)
 
 	// User - all protected
-	userGroup := e.Group("/users", middleware.JWTAuth())
+	userGroup := v1.Group("/users", middleware.JWTAuth())
 	userGroup.GET("/search", s.user.Search)
 	userGroup.GET("/me", s.user.GetMe)
 	userGroup.PATCH("/me/settings", s.user.UpdateSettings)
@@ -73,7 +75,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	userGroup.POST("/:user_id/unblock", s.user.Unblock)
 
 	// Void - all protected
-	voidGroup := e.Group("/void", middleware.JWTAuth())
+	voidGroup := v1.Group("/void", middleware.JWTAuth())
 	voidGroup.POST("/start", s.void.Start)
 	voidGroup.POST("/end", s.void.End)
 	voidGroup.POST("/cancel", s.void.Cancel)
@@ -83,7 +85,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	}
 
 	// Friend - all protected
-	friendGroup := e.Group("/friends", middleware.JWTAuth())
+	friendGroup := v1.Group("/friends", middleware.JWTAuth())
 	friendGroup.GET("", s.friend.GetFriends)
 	friendGroup.DELETE("/:user_id", s.friend.RemoveFriend)
 	friendGroup.GET("/requests", s.friend.GetRequests)
@@ -96,7 +98,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	friendGroup.POST("/:user_id/nudge", s.friend.Nudge)
 
 	// Stat - all protected
-	statGroup := e.Group("/stats", middleware.JWTAuth())
+	statGroup := v1.Group("/stats", middleware.JWTAuth())
 	statGroup.GET("/home", s.stat.GetHomeStat)
 	statGroup.GET("/daily", s.stat.GetDailyStat)
 	statGroup.GET("/me", s.stat.GetMyVoidStat)
@@ -105,7 +107,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	}
 
 	// Notification - all protected
-	notifGroup := e.Group("/notifications", middleware.JWTAuth())
+	notifGroup := v1.Group("/notifications", middleware.JWTAuth())
 	notifGroup.GET("", s.notification.GetNotifications)
 	notifGroup.PATCH("/read-all", s.notification.MarkAllAsRead)
 	notifGroup.PATCH("/:notification_id/read", s.notification.MarkAsRead)
@@ -114,7 +116,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	notifGroup.GET("/unread-count", s.notification.GetUnreadCount)
 
 	// Device - all protected
-	deviceGroup := e.Group("/devices", middleware.JWTAuth())
+	deviceGroup := v1.Group("/devices", middleware.JWTAuth())
 	deviceGroup.PUT("/token", s.device.RegisterToken)
 	deviceGroup.DELETE("/token", s.device.DeleteToken)
 
