@@ -38,7 +38,7 @@ func NewServer() *http.Server {
 	database.EnsureIndexes(db)
 
 	socialVerifier := auth.NewSocialVerifier()
-	pushClient := push.NewAPNsClient()
+	pushClient := push.NewExpoPushClient()
 
 	healthRepo := repository.NewHealthRepository(db)
 	userRepo := repository.NewUserRepository(db)

@@ -1,6 +1,6 @@
 # dangbamgong-backend
 
-공백 추적 소셜 앱 당밤공의 Go 백엔드 서버.
+iOS 전용 공백 추적 소셜 앱 당밤공의 Go 백엔드 서버.
 
 ## Tech Stack
 
