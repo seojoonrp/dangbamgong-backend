@@ -59,6 +59,7 @@ type UserSearchItem struct {
 	Nickname  string `json:"nickname"`
 	Tag       string `json:"tag"`
 	IsBlocked bool   `json:"isBlocked"`
+	IsFriend  bool   `json:"isFriend"`
 }
 
 type BlockItem struct {
