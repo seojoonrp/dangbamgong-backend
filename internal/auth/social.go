@@ -81,8 +81,9 @@ func (v *defaultSocialVerifier) verifyGoogle(ctx context.Context, idToken string
 		return nil, domain.NewInternal("failed to decode google token info: " + err.Error())
 	}
 
-	clientID := os.Getenv("GOOGLE_WEB_CLIENT_ID")
-	if result.Aud != clientID {
+	webClientID := os.Getenv("GOOGLE_WEB_CLIENT_ID")
+	iosClientID := os.Getenv("GOOGLE_IOS_CLIENT_ID")
+	if result.Aud != webClientID && result.Aud != iosClientID {
 		return nil, domain.NewUnauthorized(domain.ErrInvalidToken, "google token audience mismatch")
 	}
 

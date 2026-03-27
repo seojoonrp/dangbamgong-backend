@@ -88,6 +88,7 @@ domain.NewInternal("message")
 | DB_NAME                                                     | DB 이름 (기본 dangbamgong)    |
 | JWT_SECRET                                                  | JWT 서명 키                   |
 | GOOGLE_WEB_CLIENT_ID                                        | Google OAuth 클라이언트 ID    |
+| GOOGLE_IOS_CLIENT_ID                                        | Google iOS 클라이언트 ID      |
 | KAKAO_ADMIN_KEY                                             | Kakao REST API 키             |
 | APPLE_KEY_PATH / APPLE_KEY_ID / APPLE_TEAM_ID / APPLE_TOPIC | Apple 인증 설정               |
 
