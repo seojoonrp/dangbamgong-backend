@@ -155,6 +155,18 @@ func (s *userService) Search(ctx context.Context, userID string, tagPrefix strin
 		friendSet[f.FriendID] = true
 	}
 
+	// 내가 보낸 pending 친구 요청
+	sentRequests, err := s.friendRequestRepo.FindBySenderID(ctx, oid)
+	if err != nil {
+		return nil, domain.NewInternal("failed to find sent requests: " + err.Error())
+	}
+	sentRequestSet := make(map[primitive.ObjectID]bool, len(sentRequests))
+	for _, r := range sentRequests {
+		if r.Status == "PENDING" {
+			sentRequestSet[r.ReceiverID] = true
+		}
+	}
+
 	sanitized := regexp.QuoteMeta(tagPrefix)
 	users, err := s.userRepo.SearchByTagPrefix(ctx, sanitized, excludeIDs, 20)
 	if err != nil {
@@ -164,11 +176,12 @@ func (s *userService) Search(ctx context.Context, userID string, tagPrefix strin
 	items := make([]dto.UserSearchItem, len(users))
 	for i, u := range users {
 		items[i] = dto.UserSearchItem{
-			UserID:    u.ID.Hex(),
-			Nickname:  u.Nickname,
-			Tag:       u.Tag,
-			IsBlocked: myBlockedSet[u.ID],
-			IsFriend:  friendSet[u.ID],
+			UserID:         u.ID.Hex(),
+			Nickname:       u.Nickname,
+			Tag:            u.Tag,
+			IsBlocked:      myBlockedSet[u.ID],
+			IsFriend:       friendSet[u.ID],
+			HasSentRequest: sentRequestSet[u.ID],
 		}
 	}
 

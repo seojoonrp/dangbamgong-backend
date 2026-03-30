@@ -55,11 +55,12 @@ type UserSearchResponse struct {
 }
 
 type UserSearchItem struct {
-	UserID    string `json:"userId"`
-	Nickname  string `json:"nickname"`
-	Tag       string `json:"tag"`
-	IsBlocked bool   `json:"isBlocked"`
-	IsFriend  bool   `json:"isFriend"`
+	UserID         string `json:"userId"`
+	Nickname       string `json:"nickname"`
+	Tag            string `json:"tag"`
+	IsBlocked      bool   `json:"isBlocked"`
+	IsFriend       bool   `json:"isFriend"`
+	HasSentRequest bool   `json:"hasSentRequest"`
 }
 
 type BlockItem struct {
