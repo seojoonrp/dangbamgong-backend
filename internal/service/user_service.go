@@ -63,6 +63,7 @@ func (s *userService) GetMe(ctx context.Context, userID string) (*dto.UserMeResp
 		SocialProvider:       string(user.SocialProvider),
 		IsInVoid:             user.IsInVoid,
 		CurrentVoidStartedAt: user.CurrentVoidStartedAt,
+		CreatedAt:            user.CreatedAt,
 		NotificationSettings: dto.NotificationSettings{
 			VoidReminder:  user.NotificationSettings.VoidReminder,
 			ReminderHours: user.NotificationSettings.ReminderHours,
@@ -167,6 +168,16 @@ func (s *userService) Search(ctx context.Context, userID string, tagPrefix strin
 		}
 	}
 
+	// 나에게 온 pending 친구 요청
+	receivedRequests, err := s.friendRequestRepo.FindByReceiverID(ctx, oid, model.FriendRequestPending)
+	if err != nil {
+		return nil, domain.NewInternal("failed to find received requests: " + err.Error())
+	}
+	receivedRequestSet := make(map[primitive.ObjectID]bool, len(receivedRequests))
+	for _, r := range receivedRequests {
+		receivedRequestSet[r.SenderID] = true
+	}
+
 	sanitized := regexp.QuoteMeta(tagPrefix)
 	users, err := s.userRepo.SearchByTagPrefix(ctx, sanitized, excludeIDs, 20)
 	if err != nil {
@@ -176,12 +187,13 @@ func (s *userService) Search(ctx context.Context, userID string, tagPrefix strin
 	items := make([]dto.UserSearchItem, len(users))
 	for i, u := range users {
 		items[i] = dto.UserSearchItem{
-			UserID:         u.ID.Hex(),
-			Nickname:       u.Nickname,
-			Tag:            u.Tag,
-			IsBlocked:      myBlockedSet[u.ID],
-			IsFriend:       friendSet[u.ID],
-			HasSentRequest: sentRequestSet[u.ID],
+			UserID:             u.ID.Hex(),
+			Nickname:           u.Nickname,
+			Tag:                u.Tag,
+			IsBlocked:          myBlockedSet[u.ID],
+			IsFriend:           friendSet[u.ID],
+			HasSentRequest:     sentRequestSet[u.ID],
+			HasReceivedRequest: receivedRequestSet[u.ID],
 		}
 	}
 

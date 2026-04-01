@@ -11,6 +11,7 @@ type UserMeResponse struct {
 	IsInVoid             bool                 `json:"isInVoid"`
 	CurrentVoidStartedAt *time.Time           `json:"currentVoidStartedAt"`
 	NotificationSettings NotificationSettings `json:"notificationSettings"`
+	CreatedAt            time.Time            `json:"createdAt"`
 }
 
 type NotificationSettings struct {
@@ -55,12 +56,13 @@ type UserSearchResponse struct {
 }
 
 type UserSearchItem struct {
-	UserID         string `json:"userId"`
-	Nickname       string `json:"nickname"`
-	Tag            string `json:"tag"`
-	IsBlocked      bool   `json:"isBlocked"`
-	IsFriend       bool   `json:"isFriend"`
-	HasSentRequest bool   `json:"hasSentRequest"`
+	UserID             string `json:"userId"`
+	Nickname           string `json:"nickname"`
+	Tag                string `json:"tag"`
+	IsBlocked          bool   `json:"isBlocked"`
+	IsFriend           bool   `json:"isFriend"`
+	HasSentRequest     bool   `json:"hasSentRequest"`
+	HasReceivedRequest bool   `json:"hasReceivedRequest"`
 }
 
 type BlockItem struct {
