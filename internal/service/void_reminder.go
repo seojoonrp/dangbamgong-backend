@@ -44,12 +44,12 @@ func (s *VoidReminderScheduler) Schedule(userID primitive.ObjectID, startedAt ti
 	remaining := time.Until(deadline)
 
 	if remaining <= 0 {
-		go s.fire(userID)
+		go s.fire(userID, reminderHours)
 		return
 	}
 
 	s.timers[key] = time.AfterFunc(remaining, func() {
-		s.fire(userID)
+		s.fire(userID, reminderHours)
 	})
 
 	log.Printf("[REMINDER] scheduled for user %s in %v\n", key, remaining)
@@ -66,7 +66,7 @@ func (s *VoidReminderScheduler) Cancel(userID string) {
 	}
 }
 
-func (s *VoidReminderScheduler) fire(userID primitive.ObjectID) {
+func (s *VoidReminderScheduler) fire(userID primitive.ObjectID, hours int) {
 	s.mu.Lock()
 	delete(s.timers, userID.Hex())
 	s.mu.Unlock()
@@ -74,7 +74,7 @@ func (s *VoidReminderScheduler) fire(userID primitive.ObjectID) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	if err := s.notifSvc.SendVoidReminder(ctx, userID); err != nil {
+	if err := s.notifSvc.SendVoidReminder(ctx, userID, hours); err != nil {
 		log.Printf("[REMINDER] failed to send void reminder for %s: %v\n", userID.Hex(), err)
 	}
 }

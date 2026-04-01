@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -15,7 +16,7 @@ import (
 )
 
 type NotificationService interface {
-	SendVoidReminder(ctx context.Context, userID primitive.ObjectID) error
+	SendVoidReminder(ctx context.Context, userID primitive.ObjectID, hours int) error
 	SendVoidAutoCancel(ctx context.Context, userID primitive.ObjectID) error
 	SendFriendRequest(ctx context.Context, receiverID primitive.ObjectID, senderNickname string) error
 	SendFriendAccept(ctx context.Context, originalSenderID primitive.ObjectID, accepterNickname string) error
@@ -101,11 +102,11 @@ func (s *notificationService) isPushEnabled(ctx context.Context, userID primitiv
 	}
 }
 
-func (s *notificationService) SendVoidReminder(ctx context.Context, userID primitive.ObjectID) error {
+func (s *notificationService) SendVoidReminder(ctx context.Context, userID primitive.ObjectID, hours int) error {
 	pushEnabled := s.isPushEnabled(ctx, userID, model.NotifVoidReminder)
 	s.sendNotification(ctx, userID, model.NotifVoidReminder,
-		"오랜 공백 알림",
-		"설정한 시간이 지났어요. 공백을 확인해보세요.",
+		"당밤공 알림",
+		fmt.Sprintf("공백을 시작한 지 %d시간이 지났어요", hours),
 		nil, pushEnabled,
 	)
 	return nil
@@ -113,8 +114,8 @@ func (s *notificationService) SendVoidReminder(ctx context.Context, userID primi
 
 func (s *notificationService) SendVoidAutoCancel(ctx context.Context, userID primitive.ObjectID) error {
 	s.sendNotification(ctx, userID, model.NotifVoidAutoCancel,
-		"공백 자동 취소",
-		"새로운 하루가 시작되어 공백이 자동 취소되었어요.",
+		"당밤공 알림",
+		"새로운 하루가 시작되어 공백이 자동 취소되었어요",
 		nil, true,
 	)
 	return nil
@@ -123,8 +124,8 @@ func (s *notificationService) SendVoidAutoCancel(ctx context.Context, userID pri
 func (s *notificationService) SendFriendRequest(ctx context.Context, receiverID primitive.ObjectID, senderNickname string) error {
 	pushEnabled := s.isPushEnabled(ctx, receiverID, model.NotifFriendRequest)
 	s.sendNotification(ctx, receiverID, model.NotifFriendRequest,
-		"친구 요청",
-		senderNickname+"님이 친구 요청을 보냈어요.",
+		senderNickname,
+		"친구 요청을 보냈어요",
 		map[string]string{"senderNickname": senderNickname}, pushEnabled,
 	)
 	return nil
@@ -133,8 +134,8 @@ func (s *notificationService) SendFriendRequest(ctx context.Context, receiverID 
 func (s *notificationService) SendFriendAccept(ctx context.Context, originalSenderID primitive.ObjectID, accepterNickname string) error {
 	pushEnabled := s.isPushEnabled(ctx, originalSenderID, model.NotifFriendAccept)
 	s.sendNotification(ctx, originalSenderID, model.NotifFriendAccept,
-		"친구 수락",
-		accepterNickname+"님이 친구 요청을 수락했어요.",
+		accepterNickname,
+		"친구 요청을 수락했어요.",
 		map[string]string{"accepterNickname": accepterNickname}, pushEnabled,
 	)
 	return nil
@@ -143,8 +144,8 @@ func (s *notificationService) SendFriendAccept(ctx context.Context, originalSend
 func (s *notificationService) SendFriendNudge(ctx context.Context, targetID primitive.ObjectID, senderNickname string) error {
 	pushEnabled := s.isPushEnabled(ctx, targetID, model.NotifFriendNudge)
 	s.sendNotification(ctx, targetID, model.NotifFriendNudge,
-		"친구 알림",
-		senderNickname+"님이 알림을 보냈어요.",
+		senderNickname,
+		"알림을 보냈어요",
 		map[string]string{"senderNickname": senderNickname}, pushEnabled,
 	)
 	return nil
