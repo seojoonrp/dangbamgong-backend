@@ -20,6 +20,7 @@ type UserRepository interface {
 	UpdateNickname(ctx context.Context, id primitive.ObjectID, nickname string) error
 	UpdateSettings(ctx context.Context, id primitive.ObjectID, settings model.NotificationSettings) error
 	SetVoidState(ctx context.Context, id primitive.ObjectID, isInVoid bool, startedAt *time.Time, lastVoidEndedAt *time.Time) error
+	UpdateAppleRefreshToken(ctx context.Context, id primitive.ObjectID, token string) error
 	DeleteByID(ctx context.Context, id primitive.ObjectID) error
 	SearchByTagPrefix(ctx context.Context, prefix string, excludeIDs []primitive.ObjectID, limit int) ([]model.User, error)
 	FindByIDs(ctx context.Context, ids []primitive.ObjectID) ([]model.User, error)
@@ -121,6 +122,16 @@ func (r *userRepository) SetVoidState(ctx context.Context, id primitive.ObjectID
 	}
 
 	_, err := r.coll.UpdateByID(ctx, id, bson.M{"$set": fields})
+	return err
+}
+
+func (r *userRepository) UpdateAppleRefreshToken(ctx context.Context, id primitive.ObjectID, token string) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	_, err := r.coll.UpdateByID(ctx, id, bson.M{
+		"$set": bson.M{"apple_refresh_token": token, "updated_at": time.Now()},
+	})
 	return err
 }
 

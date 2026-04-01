@@ -82,7 +82,7 @@ func (s *authService) findOrCreateAndGenerateToken(
 	ctx context.Context,
 	provider model.SocialProvider,
 	socialID string,
-	appleRefreshToken string,
+	appleAuthCode string,
 ) (*dto.LoginResponse, error) {
 	user, err := s.userRepo.FindBySocial(ctx, provider, socialID)
 	if err != nil {
@@ -92,6 +92,14 @@ func (s *authService) findOrCreateAndGenerateToken(
 	isNewUser := false
 	if user == nil {
 		isNewUser = true
+
+		var appleRefreshToken string
+		if provider == model.ProviderApple && appleAuthCode != "" {
+			if rt, err := auth.ExchangeAppleAuthCode(ctx, appleAuthCode); err == nil {
+				appleRefreshToken = rt
+			}
+		}
+
 		now := time.Now()
 		user = &model.User{
 			SocialProvider: provider,
@@ -110,6 +118,11 @@ func (s *authService) findOrCreateAndGenerateToken(
 			return nil, err
 		}
 		s.createDefaultActivities(ctx, user.ID)
+	} else if provider == model.ProviderApple && appleAuthCode != "" {
+		// 기존 Apple 사용자 재로그인 시 refresh token 갱신
+		if rt, err := auth.ExchangeAppleAuthCode(ctx, appleAuthCode); err == nil {
+			_ = s.userRepo.UpdateAppleRefreshToken(ctx, user.ID, rt)
+		}
 	}
 
 	token, err := auth.GenerateToken(user.ID.Hex())

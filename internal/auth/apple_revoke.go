@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"dangbamgong-backend/internal/domain"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -71,6 +72,54 @@ func RevokeAppleToken(ctx context.Context, refreshToken string) error {
 		return fmt.Errorf("apple revoke failed with status %d", resp.StatusCode)
 	}
 	return nil
+}
+
+// ExchangeAppleAuthCode exchanges an Apple authorization code for a refresh token.
+// iOS 앱에서 전달받은 one-time authorization code를 Apple의 /auth/token 엔드포인트에서 refresh token으로 교환한다.
+func ExchangeAppleAuthCode(ctx context.Context, authCode string) (string, error) {
+	clientSecret, err := GenerateAppleClientSecret()
+	if err != nil {
+		return "", err
+	}
+
+	data := url.Values{
+		"client_id":     {clientID()},
+		"client_secret": {clientSecret},
+		"code":          {authCode},
+		"grant_type":    {"authorization_code"},
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST",
+		"https://appleid.apple.com/auth/token",
+		strings.NewReader(data.Encode()),
+	)
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	resp, err := (&http.Client{}).Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	var result struct {
+		RefreshToken string `json:"refresh_token"`
+		Error        string `json:"error"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return "", domain.NewInternal("failed to decode apple token response: " + err.Error())
+	}
+
+	if result.Error != "" {
+		return "", fmt.Errorf("apple token exchange failed: %s", result.Error)
+	}
+	if result.RefreshToken == "" {
+		return "", fmt.Errorf("apple token exchange returned empty refresh token")
+	}
+
+	return result.RefreshToken, nil
 }
 
 func clientID() string {
