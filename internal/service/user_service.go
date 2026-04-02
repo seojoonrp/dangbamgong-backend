@@ -173,9 +173,10 @@ func (s *userService) Search(ctx context.Context, userID string, tagPrefix strin
 	if err != nil {
 		return nil, domain.NewInternal("failed to find received requests: " + err.Error())
 	}
-	receivedRequestSet := make(map[primitive.ObjectID]bool, len(receivedRequests))
+	// senderID -> requestID 매핑 (바로 수락할 수 있도록 ID 보관)
+	receivedRequestMap := make(map[primitive.ObjectID]string, len(receivedRequests))
 	for _, r := range receivedRequests {
-		receivedRequestSet[r.SenderID] = true
+		receivedRequestMap[r.SenderID] = r.ID.Hex()
 	}
 
 	sanitized := regexp.QuoteMeta(tagPrefix)
@@ -186,6 +187,10 @@ func (s *userService) Search(ctx context.Context, userID string, tagPrefix strin
 
 	items := make([]dto.UserSearchItem, len(users))
 	for i, u := range users {
+		var receivedRequestID *string
+		if reqID, ok := receivedRequestMap[u.ID]; ok {
+			receivedRequestID = &reqID
+		}
 		items[i] = dto.UserSearchItem{
 			UserID:             u.ID.Hex(),
 			Nickname:           u.Nickname,
@@ -193,7 +198,8 @@ func (s *userService) Search(ctx context.Context, userID string, tagPrefix strin
 			IsBlocked:          myBlockedSet[u.ID],
 			IsFriend:           friendSet[u.ID],
 			HasSentRequest:     sentRequestSet[u.ID],
-			HasReceivedRequest: receivedRequestSet[u.ID],
+			HasReceivedRequest: receivedRequestID != nil,
+			ReceivedRequestID:  receivedRequestID,
 		}
 	}
 

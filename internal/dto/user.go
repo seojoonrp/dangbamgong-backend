@@ -56,13 +56,14 @@ type UserSearchResponse struct {
 }
 
 type UserSearchItem struct {
-	UserID             string `json:"userId"`
-	Nickname           string `json:"nickname"`
-	Tag                string `json:"tag"`
-	IsBlocked          bool   `json:"isBlocked"`
-	IsFriend           bool   `json:"isFriend"`
-	HasSentRequest     bool   `json:"hasSentRequest"`
-	HasReceivedRequest bool   `json:"hasReceivedRequest"`
+	UserID              string  `json:"userId"`
+	Nickname            string  `json:"nickname"`
+	Tag                 string  `json:"tag"`
+	IsBlocked           bool    `json:"isBlocked"`
+	IsFriend            bool    `json:"isFriend"`
+	HasSentRequest      bool    `json:"hasSentRequest"`
+	HasReceivedRequest  bool    `json:"hasReceivedRequest"`
+	ReceivedRequestID   *string `json:"receivedRequestId,omitempty"`
 }
 
 type BlockItem struct {
