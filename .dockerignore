@@ -1,0 +1,6 @@
+.env
+.git
+*.p8
+tmp/
+.air.toml
+api.http
