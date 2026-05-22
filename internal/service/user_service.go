@@ -217,17 +217,28 @@ func (s *userService) GetBlocks(ctx context.Context, userID string) (*dto.BlockL
 		return nil, domain.NewInternal("failed to find blocks: " + err.Error())
 	}
 
-	items := make([]dto.BlockItem, 0, len(blocks))
+	blockedIDs := make([]primitive.ObjectID, 0, len(blocks))
+	for _, block := range blocks {
+		blockedIDs = append(blockedIDs, block.BlockedID)
+	}
+
+	blockedUsers, err := s.userRepo.FindByIDs(ctx, blockedIDs)
+	if err != nil {
+		return nil, domain.NewInternal("failed to find blocked users: " + err.Error())
+	}
+
+	blockedAtmap := make(map[primitive.ObjectID]time.Time, len(blocks))
 	for _, b := range blocks {
-		blocked, err := s.userRepo.FindByID(ctx, b.BlockedID)
-		if err != nil || blocked == nil {
-			continue
-		}
+		blockedAtmap[b.BlockedID] = b.CreatedAt
+	}
+
+	items := make([]dto.BlockItem, 0, len(blockedUsers))
+	for _, bu := range blockedUsers {
 		items = append(items, dto.BlockItem{
-			UserID:    blocked.ID.Hex(),
-			Nickname:  blocked.Nickname,
-			Tag:       blocked.Tag,
-			BlockedAt: b.CreatedAt,
+			UserID:    bu.ID.Hex(),
+			Nickname:  bu.Nickname,
+			Tag:       bu.Tag,
+			BlockedAt: blockedAtmap[bu.ID],
 		})
 	}
 

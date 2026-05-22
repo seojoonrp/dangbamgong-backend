@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"dangbamgong-backend/internal/model"
@@ -148,7 +149,7 @@ func (r *userRepository) SearchByTagPrefix(ctx context.Context, prefix string, e
 	defer cancel()
 
 	filter := bson.M{
-		"tag": bson.M{"$regex": "^" + prefix, "$options": "i"},
+		"tag": bson.M{"$regex": "^" + strings.ToUpper(prefix)},
 	}
 	if len(excludeIDs) > 0 {
 		filter["_id"] = bson.M{"$nin": excludeIDs}
