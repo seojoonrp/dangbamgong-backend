@@ -34,9 +34,12 @@ func GenerateToken(userID string) (string, error) {
 
 func ParseToken(tokenString string) (*Claims, error) {
 	secret := []byte(os.Getenv("JWT_SECRET"))
-	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(t *jwt.Token) (interface{}, error) {
-		return secret, nil
-	})
+	token, err := jwt.ParseWithClaims(tokenString, &Claims{},
+		func(t *jwt.Token) (interface{}, error) {
+			return secret, nil
+		},
+		jwt.WithValidMethods([]string{"HS256"}),
+	)
 	if err != nil {
 		return nil, err
 	}
