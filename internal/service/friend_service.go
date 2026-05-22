@@ -317,7 +317,7 @@ func (s *friendService) SendRequest(ctx context.Context, userID string, req dto.
 
 	sender, err := s.userRepo.FindByID(ctx, senderOid)
 	if err == nil && sender != nil {
-		_ = s.notifSvc.SendFriendRequest(ctx, receiverOid, sender.Nickname)
+		s.notifSvc.SendFriendRequest(receiverOid, sender.Nickname)
 	}
 
 	return &dto.SendFriendRequestResponse{RequestID: friendReq.ID.Hex()}, nil
@@ -375,7 +375,7 @@ func (s *friendService) AcceptRequest(ctx context.Context, userID string, reques
 
 	accepter, err := s.userRepo.FindByID(ctx, oid)
 	if err == nil && accepter != nil {
-		_ = s.notifSvc.SendFriendAccept(ctx, friendReq.SenderID, accepter.Nickname)
+		s.notifSvc.SendFriendAccept(friendReq.SenderID, accepter.Nickname)
 	}
 
 	return nil
@@ -493,7 +493,7 @@ func (s *friendService) Nudge(ctx context.Context, userID string, targetID strin
 
 	sender, err := s.userRepo.FindByID(ctx, oid)
 	if err == nil && sender != nil {
-		_ = s.notifSvc.SendFriendNudge(ctx, targetOid, sender.Nickname)
+		s.notifSvc.SendFriendNudge(targetOid, sender.Nickname)
 	}
 
 	return nil

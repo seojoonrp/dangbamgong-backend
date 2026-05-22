@@ -71,12 +71,8 @@ func (s *VoidReminderScheduler) fire(userID primitive.ObjectID, hours int) {
 	delete(s.timers, userID.Hex())
 	s.mu.Unlock()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	if err := s.notifSvc.SendVoidReminder(ctx, userID, hours); err != nil {
-		log.Printf("[REMINDER] failed to send void reminder for %s: %v\n", userID.Hex(), err)
-	}
+	// SendVoidReminder는 내부에서 별도 goroutine + background ctx로 비동기 실행된다.
+	s.notifSvc.SendVoidReminder(userID, hours)
 }
 
 func (s *VoidReminderScheduler) CancelAll() int {

@@ -16,11 +16,14 @@ import (
 )
 
 type NotificationService interface {
-	SendVoidReminder(ctx context.Context, userID primitive.ObjectID, hours int) error
-	SendVoidAutoCancel(ctx context.Context, userID primitive.ObjectID) error
-	SendFriendRequest(ctx context.Context, receiverID primitive.ObjectID, senderNickname string) error
-	SendFriendAccept(ctx context.Context, originalSenderID primitive.ObjectID, accepterNickname string) error
-	SendFriendNudge(ctx context.Context, targetID primitive.ObjectID, senderNickname string) error
+	// Send* 는 푸시 알림을 유발하는 fire-and-forget 메서드다.
+	// 요청 생명주기와 분리하기 위해 내부에서 dispatch(별도 goroutine + background ctx)로 실행되며,
+	// 따라서 ctx를 받지 않고 error도 반환하지 않는다 (실패는 내부에서 로깅).
+	SendVoidReminder(userID primitive.ObjectID, hours int)
+	SendVoidAutoCancel(userID primitive.ObjectID)
+	SendFriendRequest(receiverID primitive.ObjectID, senderNickname string)
+	SendFriendAccept(originalSenderID primitive.ObjectID, accepterNickname string)
+	SendFriendNudge(targetID primitive.ObjectID, senderNickname string)
 
 	GetNotifications(ctx context.Context, userID string, limit int, offset int) (*dto.NotificationListResponse, error)
 	MarkAsRead(ctx context.Context, userID string, notifID string) error
@@ -102,53 +105,58 @@ func (s *notificationService) isPushEnabled(ctx context.Context, userID primitiv
 	}
 }
 
-func (s *notificationService) SendVoidReminder(ctx context.Context, userID primitive.ObjectID, hours int) error {
-	pushEnabled := s.isPushEnabled(ctx, userID, model.NotifVoidReminder)
-	s.sendNotification(ctx, userID, model.NotifVoidReminder,
-		"당밤공 알림",
-		fmt.Sprintf("공백을 시작한 지 %d시간이 지났어요", hours),
-		nil, pushEnabled,
-	)
-	return nil
+func (s *notificationService) SendVoidReminder(userID primitive.ObjectID, hours int) {
+	s.dispatch(func(ctx context.Context) {
+		pushEnabled := s.isPushEnabled(ctx, userID, model.NotifVoidReminder)
+		s.sendNotification(ctx, userID, model.NotifVoidReminder,
+			"당밤공 알림",
+			fmt.Sprintf("공백을 시작한 지 %d시간이 지났어요", hours),
+			nil, pushEnabled,
+		)
+	})
 }
 
-func (s *notificationService) SendVoidAutoCancel(ctx context.Context, userID primitive.ObjectID) error {
-	s.sendNotification(ctx, userID, model.NotifVoidAutoCancel,
-		"당밤공 알림",
-		"새로운 하루가 시작되어 공백이 자동 취소되었어요",
-		nil, true,
-	)
-	return nil
+func (s *notificationService) SendVoidAutoCancel(userID primitive.ObjectID) {
+	s.dispatch(func(ctx context.Context) {
+		s.sendNotification(ctx, userID, model.NotifVoidAutoCancel,
+			"당밤공 알림",
+			"새로운 하루가 시작되어 공백이 자동 취소되었어요",
+			nil, true,
+		)
+	})
 }
 
-func (s *notificationService) SendFriendRequest(ctx context.Context, receiverID primitive.ObjectID, senderNickname string) error {
-	pushEnabled := s.isPushEnabled(ctx, receiverID, model.NotifFriendRequest)
-	s.sendNotification(ctx, receiverID, model.NotifFriendRequest,
-		senderNickname,
-		"친구 요청을 보냈어요",
-		map[string]string{"senderNickname": senderNickname}, pushEnabled,
-	)
-	return nil
+func (s *notificationService) SendFriendRequest(receiverID primitive.ObjectID, senderNickname string) {
+	s.dispatch(func(ctx context.Context) {
+		pushEnabled := s.isPushEnabled(ctx, receiverID, model.NotifFriendRequest)
+		s.sendNotification(ctx, receiverID, model.NotifFriendRequest,
+			senderNickname,
+			"친구 요청을 보냈어요",
+			map[string]string{"senderNickname": senderNickname}, pushEnabled,
+		)
+	})
 }
 
-func (s *notificationService) SendFriendAccept(ctx context.Context, originalSenderID primitive.ObjectID, accepterNickname string) error {
-	pushEnabled := s.isPushEnabled(ctx, originalSenderID, model.NotifFriendAccept)
-	s.sendNotification(ctx, originalSenderID, model.NotifFriendAccept,
-		accepterNickname,
-		"친구 요청을 수락했어요.",
-		map[string]string{"accepterNickname": accepterNickname}, pushEnabled,
-	)
-	return nil
+func (s *notificationService) SendFriendAccept(originalSenderID primitive.ObjectID, accepterNickname string) {
+	s.dispatch(func(ctx context.Context) {
+		pushEnabled := s.isPushEnabled(ctx, originalSenderID, model.NotifFriendAccept)
+		s.sendNotification(ctx, originalSenderID, model.NotifFriendAccept,
+			accepterNickname,
+			"친구 요청을 수락했어요.",
+			map[string]string{"accepterNickname": accepterNickname}, pushEnabled,
+		)
+	})
 }
 
-func (s *notificationService) SendFriendNudge(ctx context.Context, targetID primitive.ObjectID, senderNickname string) error {
-	pushEnabled := s.isPushEnabled(ctx, targetID, model.NotifFriendNudge)
-	s.sendNotification(ctx, targetID, model.NotifFriendNudge,
-		senderNickname,
-		"알림을 보냈어요",
-		map[string]string{"senderNickname": senderNickname}, pushEnabled,
-	)
-	return nil
+func (s *notificationService) SendFriendNudge(targetID primitive.ObjectID, senderNickname string) {
+	s.dispatch(func(ctx context.Context) {
+		pushEnabled := s.isPushEnabled(ctx, targetID, model.NotifFriendNudge)
+		s.sendNotification(ctx, targetID, model.NotifFriendNudge,
+			senderNickname,
+			"알림을 보냈어요",
+			map[string]string{"senderNickname": senderNickname}, pushEnabled,
+		)
+	})
 }
 
 func (s *notificationService) GetNotifications(ctx context.Context, userID string, limit int, offset int) (*dto.NotificationListResponse, error) {
@@ -269,4 +277,18 @@ func (s *notificationService) DeleteAllRead(ctx context.Context, userID string) 
 		return domain.NewInternal("failed to delete read notifications: " + err.Error())
 	}
 	return nil
+}
+
+func (s *notificationService) dispatch(fn func(ctx context.Context)) {
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("[NOTIF] panic in async dispatch: %v\n", r)
+			}
+		}()
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		fn(ctx)
+	}()
 }

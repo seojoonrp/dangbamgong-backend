@@ -77,11 +77,10 @@ func (s *DayResetScheduler) execute() {
 	reminderCount := s.reminderScheduler.CancelAll()
 	log.Printf("[DAY_RESET] cleared %d reminder timers\n", reminderCount)
 
-	// 4. 취소된 유저들에게 푸시 알림 전송
+	// 4. 취소된 유저들에게 푸시 알림 전송 (각 호출은 내부에서 비동기로 처리됨)
+	// TODO: 유저가 많아지면 goroutine이 유저 수만큼 생긴다. expo_push의 배치 전송으로 묶는 게 좋다.
 	for _, user := range usersInVoid {
-		if err := s.notifSvc.SendVoidAutoCancel(ctx, user.ID); err != nil {
-			log.Printf("[DAY_RESET] failed to send auto cancel notification to %s: %v\n", user.ID.Hex(), err)
-		}
+		s.notifSvc.SendVoidAutoCancel(user.ID)
 	}
 
 	// 5. 전날 스탯 확정
